@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  identity_db:
+    image: postgres:15-alpine
+    container_name: identity_postgres_dev
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: identity_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - identity_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  identity_pgadmin:
+    image: dpage/pgadmin4
+    container_name: identity_pgadmin_dev
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - identity_db
+    restart: unless-stopped
+
+volumes:
+  identity_pgdata:

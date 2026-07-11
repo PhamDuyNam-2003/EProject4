@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  identity_db:
+    image: postgres:15-alpine
+    container_name: identity_postgres_dev
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: identity_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - identity_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  inventory_db:
+    image: postgres:15-alpine
+    container_name: inventory_postgres_dev
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: inventory_db
+    ports:
+      - "5433:5432" # Chạy ở cổng 5433 để không đụng với 5432 của identity
+    volumes:
+      - inventory_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  global_redis:
+    image: redis:7-alpine
+    container_name: global_redis_dev
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: global_pgadmin_dev
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - identity_db
+      - inventory_db
+    restart: unless-stopped
+
+volumes:
+  identity_pgdata:
+  inventory_pgdata:
