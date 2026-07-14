@@ -22,7 +22,7 @@ services:
       POSTGRES_PASSWORD: 123
       POSTGRES_DB: inventory_db
     ports:
-      - "5433:5432" # Chạy ở cổng 5433 để không đụng với 5432 của identity
+      - "5433:5432"
     volumes:
       - inventory_pgdata:/var/lib/postgresql/data
     restart: unless-stopped
@@ -33,6 +33,53 @@ services:
     ports:
       - "6379:6379"
     restart: unless-stopped
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: global_rabbitmq_dev
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    restart: unless-stopped
+
+  auth_db:
+    image: postgres:15-alpine
+    container_name: auth_postgres_dev
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: auth_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - auth_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  auth_api:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: auth_api_dev
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    env_file:
+      - ./auth-service/.env.dev
+    environment:
+      - DATABASE_URL=postgresql://postgres:123@auth_db:5432/auth_db?schema=public
+      - REDIS_HOST=global_redis
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+    volumes:
+      - ./auth-service:/app
+      - /app/node_modules
+    depends_on:
+      - auth_db
+      - global_redis
+      - rabbitmq
 
   pgadmin:
     image: dpage/pgadmin4
@@ -45,8 +92,10 @@ services:
     depends_on:
       - identity_db
       - inventory_db
+      - auth_db
     restart: unless-stopped
 
 volumes:
   identity_pgdata:
   inventory_pgdata:
+  auth_pgdata:
