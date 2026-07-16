@@ -14,6 +14,12 @@ app.use(express.json());
 app.use(cors());
 app.use(cookieParser());
 
+import bookingRouter from "@/modules/booking/BookingRouter.js";
+import paymentRouter from "@/modules/payment/PaymentRouter.js";
+
+app.use("/api/bookings", bookingRouter);
+app.use("/api/payment", paymentRouter);
+
 app.get("/api/health", (req, res) => {
   res.json({ status: "OK", service: "order-service" });
 });

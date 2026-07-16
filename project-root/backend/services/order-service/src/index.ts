@@ -2,6 +2,7 @@ import { env } from "@/config/env.js";
 import { rabbitMQ } from "@/infrastructure/rabbitmq/index.js";
 import app from "@/app.js";
 import logger from "@/utils/logger.js";
+import { startAutoCancelJob } from "@/cron/AutoCancelJob.js";
 
 const PORT = env.PORT || 3002;
 const NODE_ENV = env.NODE_ENV;
@@ -9,6 +10,7 @@ const NODE_ENV = env.NODE_ENV;
 const startServer = async () => {
   try {
     await rabbitMQ.connect();
+    startAutoCancelJob();
 
     const server = app.listen(PORT, () => {
       logger.info(`Server is running on port ${PORT} env ${NODE_ENV}`);

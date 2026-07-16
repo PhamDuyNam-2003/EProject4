@@ -65,6 +65,14 @@ class RabbitMQConnection {
     });
   }
 
+  async publishEvent<T>(exchange: string, routingKey: string, data: T): Promise<void> {
+    const channel = this.getChannel();
+    await channel.assertExchange(exchange, "topic", { durable: true });
+    channel.publish(exchange, routingKey, Buffer.from(JSON.stringify(data)), {
+      persistent: true
+    });
+  }
+
   async consumeQueue(
     queueName: string,
     onMessage: (msg: amqp.ConsumeMessage | null) => void,
