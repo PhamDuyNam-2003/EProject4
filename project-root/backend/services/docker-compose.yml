@@ -6,7 +6,7 @@ services:
     container_name: identity_postgres_dev
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123
+      POSTGRES_PASSWORD: "123456"
       POSTGRES_DB: identity_db
     ports:
       - "5432:5432"
@@ -46,17 +46,17 @@ services:
       RABBITMQ_DEFAULT_PASS: guest
     restart: unless-stopped
 
-  auth_db:
+  order_db:
     image: postgres:15-alpine
-    container_name: auth_postgres_dev
+    container_name: order_postgres_dev
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123
-      POSTGRES_DB: auth_db
+      POSTGRES_PASSWORD: "123456"
+      POSTGRES_DB: order_db
     ports:
-      - "5434:5432"
+      - "5435:5432"
     volumes:
-      - auth_pgdata:/var/lib/postgresql/data
+      - order_pgdata:/var/lib/postgresql/data
     restart: unless-stopped
 
   identity_api:
@@ -82,6 +82,29 @@ services:
       - global_redis
       - rabbitmq
 
+  order_api:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    container_name: order_api_dev
+    command: npm run dev
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    env_file:
+      - ./order-service/.env.dev
+    environment:
+      - DATABASE_URL=postgresql://postgres:123456@order_db:5432/order_db?schema=public
+      - REDIS_HOST=global_redis
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+    volumes:
+      - ./order-service:/app
+      - /app/node_modules
+    depends_on:
+      - order_db
+      - global_redis
+      - rabbitmq
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: global_pgadmin_dev
@@ -93,10 +116,10 @@ services:
     depends_on:
       - identity_db
       - inventory_db
-      - auth_db
+      - order_db
     restart: unless-stopped
 
 volumes:
   identity_pgdata:
   inventory_pgdata:
-  auth_pgdata:
+  order_pgdata:
