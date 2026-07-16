@@ -93,9 +93,44 @@ services:
       - identity_db
       - inventory_db
       - auth_db
+      - notification_db
     restart: unless-stopped
+
+  notification_db:
+    image: postgres:15-alpine
+    container_name: notification_postgres_dev
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: notification_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - notification_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  notification_api:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    container_name: notification_api_dev
+    restart: unless-stopped
+    ports:
+      - "${NOTIFICATION_PORT:-3004}:3004"
+    env_file:
+      - ./notification-service/.env
+    environment:
+      - DATABASE_URL=postgresql://postgres:123@notification_db:5432/notification_db?schema=public
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+    volumes:
+      - ./notification-service:/app
+      - /app/node_modules
+    depends_on:
+      - notification_db
+      - rabbitmq
 
 volumes:
   identity_pgdata:
   inventory_pgdata:
   auth_pgdata:
+  notification_pgdata:
