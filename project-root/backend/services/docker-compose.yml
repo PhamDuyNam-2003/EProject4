@@ -59,25 +59,26 @@ services:
       - auth_pgdata:/var/lib/postgresql/data
     restart: unless-stopped
 
-  auth_api:
+  identity_api:
     build:
-      context: ./auth-service
+      context: ./identity-service
       dockerfile: Dockerfile
-    container_name: auth_api_dev
+    container_name: identity_api_dev
+    command: npm run dev
     restart: unless-stopped
     ports:
       - "${PORT:-3000}:3000"
     env_file:
-      - ./auth-service/.env.dev
+      - ./identity-service/.env.dev
     environment:
-      - DATABASE_URL=postgresql://postgres:123@auth_db:5432/auth_db?schema=public
+      - DATABASE_URL=postgresql://postgres:123456@identity_db:5432/identity_db?schema=public
       - REDIS_HOST=global_redis
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
     volumes:
-      - ./auth-service:/app
+      - ./identity-service:/app
       - /app/node_modules
     depends_on:
-      - auth_db
+      - identity_db
       - global_redis
       - rabbitmq
 
