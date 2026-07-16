@@ -2,11 +2,11 @@ import swaggerAutogen from "swagger-autogen";
 
 const services = [
   {
-    name: "User Service",
-    description: "Tài liệu API của riêng Module Users",
-    basePath: "/api/users",
-    outputFile: "./src/modules/user/docs/swagger-user.json",
-    routerFiles: ["./src/modules/user/routes/UserRouter.ts"],
+    name: "Booking Service",
+    description: "Tài liệu API của riêng Module Booking",
+    basePath: "/api/bookings",
+    outputFile: "./src/modules/booking/docs/swagger-booking.json",
+    routerFiles: ["./src/modules/booking/BookingRouter.ts"],
     components: {
       securitySchemes: {
         bearerAuth: {
@@ -16,47 +16,42 @@ const services = [
         },
       },
       schemas: {
-        CreateUserDto: {
+        CreateBookingDto: {
           type: "object",
           properties: {
-            email: { type: "string", example: "user@example.com" },
-            fullName: { type: "string", example: "Nguyen Van A" },
-            role: { type: "string", example: "USER" },
+            hotelId: { type: "string", example: "1da9801c-2325-43c4-91ea-a76bc8813f01" },
+            checkInDate: { type: "string", example: "2026-08-01" },
+            checkOutDate: { type: "string", example: "2026-08-05" },
+            rooms: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  roomId: { type: "string", example: "46fd1b9f-1a7d-4b41-a7af-928a8c0fff65" },
+                  quantity: { type: "number", example: 1 }
+                }
+              }
+            },
+            guestInfo: {
+              type: "object",
+              properties: {
+                fullName: { type: "string", example: "Test User" },
+                email: { type: "string", example: "test@example.com" },
+                phone: { type: "string", example: "0123456789" },
+                specialRequests: { type: "string", example: "Late checkin" }
+              }
+            }
           },
-        },
-        UpdateUserProfileDto: {
-          type: "object",
-          properties: {
-            fullName: { type: "string", example: "Nguyen Van B" },
-            phoneNumber: { type: "string", example: "0123456789" },
-            avatarUrl: { type: "string", example: "https://example.com/avt.jpg" },
-            address: { type: "string", example: "Ha Noi" },
-          },
-        },
-        ChangeUserStatusDto: {
-          type: "object",
-          properties: {
-            status: { type: "string", example: "ACTIVE" },
-          },
-        },
-        SubmitIdentityVerificationDto: {
-          $documentType: "CCCD",
-          $idNumber: "001002003004",
-          $idCardImageUrl: "https://example.com/id.jpg"
-        },
-        RejectIdentityVerificationDto: {
-          $reason: "Ảnh quá mờ"
         },
       },
     },
   },
   {
-    name: "Auth Service",
-    description: "Tài liệu API của riêng Module Auth",
-    basePath: "/api/auth",
-    outputFile: "./src/modules/auth/docs/swagger-auth.json",
-    routerFiles: ["./src/modules/auth/routes/AuthRouter.ts"],
-  
+    name: "Payment Service",
+    description: "Tài liệu API của riêng Module Payment",
+    basePath: "/api/payment",
+    outputFile: "./src/modules/payment/docs/swagger-payment.json",
+    routerFiles: ["./src/modules/payment/PaymentRouter.ts"],
     components: {
       securitySchemes: {
         bearerAuth: {
@@ -66,66 +61,19 @@ const services = [
         },
       },
       schemas: {
-        SendOtpDto: {
+        CreatePaymentUrlDto: {
           type: "object",
           properties: {
-            email: {
+            bookingId: {
               type: "string",
-              format: "email",
-              example: "user@example.com",
+              example: "205c04a6-ac44-4255-b7de-c2e7a8f6d9c2",
             },
           },
-          required: ["email"],
-        },
-        VerifyOtpDto: {
-          type: "object",
-          properties: {
-            email: {
-              type: "string",
-              format: "email",
-              example: "user@example.com",
-            },
-            otp: { type: "string", example: "123456" },
-          },
-          required: ["email", "otp"],
-        },
-        LoginWithPasswordDto: {
-          type: "object",
-          properties: {
-            email: {
-              type: "string",
-              format: "email",
-              example: "user@example.com",
-            },
-            password: { type: "string", example: "123456" },
-          },
-          required: ["email", "password"],
-        },
-        ResetPasswordDto: {
-          type: "object",
-          properties: {
-            email: {
-              type: "string",
-              format: "email",
-              example: "user@example.com",
-            },
-            otp: { type: "string", example: "123456" },
-            newPassword: { type: "string", example: "new_password_123" },
-          },
-          required: ["email", "otp", "newPassword"],
-        },
-        ChangePasswordDto: {
-          type: "object",
-          properties: {
-            oldPassword: { type: "string", example: "old_password_123" },
-            newPassword: { type: "string", example: "new_password_123" },
-          },
-          required: ["newPassword"],
-        },
+          required: ["bookingId"],
+        }
       },
     },
   },
- 
 ];
 
 const autogen = swaggerAutogen({ openapi: "3.0.0", autoHeaders: false });
