@@ -1,0 +1,19 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Promotion {
+  id            String   @id @default(uuid())
+  code          String   @unique
+  discountType  String   // "PERCENTAGE" hoặc "FIXED"
+  discountValue Float
+  maxDiscount   Float?   
+  startDate     DateTime
+  endDate       DateTime
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+}

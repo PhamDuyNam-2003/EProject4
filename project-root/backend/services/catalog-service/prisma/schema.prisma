@@ -1,0 +1,18 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Hotel {
+  id          String   @id @default(uuid())
+  name        String
+  address     String
+  description String?
+  rating      Float    @default(5.0)
+  priceFrom   Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

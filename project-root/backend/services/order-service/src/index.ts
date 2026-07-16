@@ -1,13 +1,10 @@
-import express from "express";
+import express from 'express';
+import promotionRouter from './modules/promotion/routes/promotion.route';
 
 const app = express();
+app.use(express.json());
 
-const PORT = 3002;
 
-app.get("/", (req, res) => {
-    res.send("Order Service Running");
-});
+app.use('/api/v1/promotions', promotionRouter);
 
-app.listen(PORT, () => {
-    console.log(`Order Service is running on port ${PORT}`);
-});
+app.listen(3002, () => console.log('Order-Promotion Service running on port 3002'));

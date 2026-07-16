@@ -1,0 +1,34 @@
+datasource db {
+  provider = "postgresql"
+  
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model RevenueReport {
+  id               String   @id @default(uuid())
+  reportDate       DateTime @db.Date
+  totalRevenue     Decimal  @db.Decimal(18, 2)
+  bookingCount     Int
+  cancelledBooking Int
+  generatedAt      DateTime @default(now())
+}
+
+model HotelReport {
+  id           String   @id @default(uuid())
+  hotelId      String   
+  bookingCount Int
+  revenue      Decimal  @db.Decimal(18, 2)
+  averageRating Float
+  reportDate   DateTime @db.Date
+}
+
+model UserReport {
+  id           String   @id @default(uuid())
+  userId       String   
+  bookingCount Int
+  totalSpent   Decimal  @db.Decimal(18, 2)
+  reportDate   DateTime @db.Date
+}
