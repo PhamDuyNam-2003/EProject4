@@ -4,6 +4,8 @@ import { env } from "../config/env.js";
 export const QUEUES = {
   BOOKING_CREATED: "booking_created_queue",
   BOOKING_CANCELLED: "booking_cancelled_queue",
+  SMS_OTP: "sms_otp_queue",
+  PUSH_NOTIFICATION: "push_notification_queue",
 } as const;
 
 export class RabbitMQConnection {
@@ -25,6 +27,8 @@ export class RabbitMQConnection {
         // Assert queues we need
         await this.channel.assertQueue(QUEUES.BOOKING_CREATED, { durable: true });
         await this.channel.assertQueue(QUEUES.BOOKING_CANCELLED, { durable: true });
+        await this.channel.assertQueue(QUEUES.SMS_OTP, { durable: true });
+        await this.channel.assertQueue(QUEUES.PUSH_NOTIFICATION, { durable: true });
 
         console.log("[RabbitMQ] Connected successfully!");
         this.isConnecting = false;

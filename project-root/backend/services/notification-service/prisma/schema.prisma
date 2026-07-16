@@ -18,3 +18,14 @@ model NotificationTemplate {
 
   @@map("notification_templates")
 }
+
+model DeviceToken {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  token      String   @unique @db.VarChar(255)
+  deviceType String?  @map("device_type") @db.VarChar(50)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("device_tokens")
+}

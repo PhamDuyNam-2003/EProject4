@@ -2,8 +2,10 @@ import express from "express";
 import cors from "cors";
 import { env } from "./config/env.js";
 import { prisma } from "./infrastructure/database.js";
-import { rabbitMQ, QUEUES } from "./infrastructure/rabbitmq.js";
+import { rabbitMQ } from "./infrastructure/rabbitmq.js";
 import { startNotificationWorker } from "./workers/notificationWorker.js";
+import deviceRouter from "./routes/deviceRoutes.js";
+import notificationRouter from "./routes/notificationRoutes.js";
 
 const app = express();
 app.use(cors());
@@ -24,7 +26,7 @@ app.get("/api/v1/templates", async (req, res) => {
   }
 });
 
-// POST /api/v1/templates (Create or Update template)
+// POST /api/v1/templates
 app.post("/api/v1/templates", async (req, res) => {
   try {
     const { code, subject, body } = req.body;
@@ -43,46 +45,9 @@ app.post("/api/v1/templates", async (req, res) => {
   }
 });
 
-// POST /api/v1/notifications/test-booking-created (Publish mock event to test queue)
-app.post("/api/v1/notifications/test-booking-created", async (req, res) => {
-  try {
-    const payload = {
-      to: req.body.to || "customer@example.com",
-      customerName: req.body.customerName || "Nguyễn Văn A",
-      bookingId: req.body.bookingId || "BKG-991234",
-      hotelName: req.body.hotelName || "NestBooking Luxury Resort & Spa",
-      roomType: req.body.roomType || "Deluxe Ocean View (King Bed)",
-      checkInDate: req.body.checkInDate || "2026-08-01",
-      checkOutDate: req.body.checkOutDate || "2026-08-05",
-      totalPrice: req.body.totalPrice || "12,500,000 VND",
-    };
-
-    await rabbitMQ.sendToQueue(QUEUES.BOOKING_CREATED, payload);
-    res.json({ message: "Mock BOOKING_CREATED event published to queue", payload });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// POST /api/v1/notifications/test-booking-cancelled (Publish mock event to test queue)
-app.post("/api/v1/notifications/test-booking-cancelled", async (req, res) => {
-  try {
-    const payload = {
-      to: req.body.to || "customer@example.com",
-      customerName: req.body.customerName || "Nguyễn Văn A",
-      bookingId: req.body.bookingId || "BKG-991234",
-      hotelName: req.body.hotelName || "NestBooking Luxury Resort & Spa",
-      roomType: req.body.roomType || "Deluxe Ocean View (King Bed)",
-      checkInDate: req.body.checkInDate || "2026-08-01",
-      totalPrice: req.body.totalPrice || "12,500,000 VND",
-    };
-
-    await rabbitMQ.sendToQueue(QUEUES.BOOKING_CANCELLED, payload);
-    res.json({ message: "Mock BOOKING_CANCELLED event published to queue", payload });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
+// Mount Routers
+app.use("/api/v1/devices", deviceRouter);
+app.use("/api/v1/notifications", notificationRouter);
 
 const startServer = async () => {
   try {
