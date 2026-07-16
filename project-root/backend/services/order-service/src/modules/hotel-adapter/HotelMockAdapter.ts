@@ -8,23 +8,23 @@ export interface RoomDetails {
 
 export class HotelMockAdapter {
   private static readonly MOCK_ROOMS: Record<string, RoomDetails> = {
-    "room-1": {
-      id: "room-1",
-      hotelId: "hotel-1",
+    "46fd1b9f-1a7d-4b41-a7af-928a8c0fff65": {
+      id: "46fd1b9f-1a7d-4b41-a7af-928a8c0fff65",
+      hotelId: "1da9801c-2325-43c4-91ea-a76bc8813f01",
       name: "Phòng Standard",
       pricePerNight: 500000,
       maxGuests: 2,
     },
-    "room-2": {
-      id: "room-2",
-      hotelId: "hotel-1",
+    "46fd1b9f-1a7d-4b41-a7af-928a8c0fff66": {
+      id: "46fd1b9f-1a7d-4b41-a7af-928a8c0fff66",
+      hotelId: "1da9801c-2325-43c4-91ea-a76bc8813f01",
       name: "Phòng VIP",
       pricePerNight: 1200000,
       maxGuests: 2,
     },
-    "room-3": {
-      id: "room-3",
-      hotelId: "hotel-2",
+    "46fd1b9f-1a7d-4b41-a7af-928a8c0fff67": {
+      id: "46fd1b9f-1a7d-4b41-a7af-928a8c0fff67",
+      hotelId: "1da9801c-2325-43c4-91ea-a76bc8813f02",
       name: "Phòng Family",
       pricePerNight: 2000000,
       maxGuests: 4,

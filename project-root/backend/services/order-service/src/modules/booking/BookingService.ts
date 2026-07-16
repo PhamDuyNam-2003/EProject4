@@ -1,9 +1,7 @@
-import { PrismaClient } from "../../../generated/prisma/index.js";
+import { prisma } from "@/config/prisma.js";
 import { hotelAdapter } from "../hotel-adapter/HotelMockAdapter.js";
-import { ApiError } from "@/utils/errors/apiError.js";
+import { BadRequestError } from "@/utils/errors/errorCustomize.js";
 import { rabbitMQ } from "@/infrastructure/rabbitmq/index.js";
-
-const prisma = new PrismaClient();
 
 export class BookingService {
   /**
@@ -21,7 +19,7 @@ export class BookingService {
     const checkOut = new Date(data.checkOutDate);
 
     if (checkIn >= checkOut) {
-      throw ApiError.badRequest("Check-out date must be after check-in date");
+      throw new BadRequestError("Check-out date must be after check-in date");
     }
 
     const totalNights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
@@ -33,12 +31,12 @@ export class BookingService {
     for (const roomReq of data.rooms) {
       const isAvailable = await hotelAdapter.checkAvailability(roomReq.roomId, checkIn, checkOut);
       if (!isAvailable) {
-        throw ApiError.badRequest(`Room ${roomReq.roomId} is not available for the selected dates`);
+        throw new BadRequestError(`Room ${roomReq.roomId} is not available for the selected dates`);
       }
 
       const roomDetails = await hotelAdapter.getRoomDetails(roomReq.roomId);
       if (!roomDetails || roomDetails.hotelId !== data.hotelId) {
-        throw ApiError.badRequest(`Invalid room ${roomReq.roomId} for hotel ${data.hotelId}`);
+        throw new BadRequestError(`Invalid room ${roomReq.roomId} for hotel ${data.hotelId}`);
       }
 
       const roomPrice = roomDetails.pricePerNight * roomReq.quantity * totalNights;

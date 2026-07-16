@@ -2,11 +2,9 @@ import crypto from "crypto";
 import qs from "qs";
 import moment from "moment";
 import { env } from "@/config/env.js";
-import { PrismaClient } from "../../../generated/prisma/index.js";
-import { ApiError } from "@/utils/errors/apiError.js";
+import { prisma } from "@/config/prisma.js";
+import { BadRequestError, NotFoundError } from "@/utils/errors/errorCustomize.js";
 import { rabbitMQ } from "@/infrastructure/rabbitmq/index.js";
-
-const prisma = new PrismaClient();
 
 export class PaymentService {
   /**
@@ -17,8 +15,8 @@ export class PaymentService {
       where: { id: bookingId }
     });
 
-    if (!booking) throw ApiError.notFound("Booking not found");
-    if (booking.paymentStatus === "PAID") throw ApiError.badRequest("Booking already paid");
+    if (!booking) throw new NotFoundError("Booking not found");
+    if (booking.paymentStatus === "PAID") throw new BadRequestError("Booking already paid");
 
     const tmnCode = env.VNPAY_TMN_CODE || "TMNCODE";
     const secretKey = env.VNPAY_HASH_SECRET || "SECRET";
@@ -84,7 +82,7 @@ export class PaymentService {
     const signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
 
     if (secureHash !== signed) {
-      throw ApiError.badRequest("Invalid signature");
+      throw new BadRequestError("Invalid signature");
     }
 
     const orderId = vnp_Params.vnp_TxnRef;
@@ -95,7 +93,7 @@ export class PaymentService {
       include: { booking: true }
     });
 
-    if (!transaction) throw ApiError.notFound("Transaction not found");
+    if (!transaction) throw new NotFoundError("Transaction not found");
 
     if (responseCode === "00") {
       // Cập nhật thành công

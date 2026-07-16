@@ -1,9 +1,7 @@
 import cron from "node-cron";
-import { PrismaClient } from "../../../generated/prisma/index.js";
+import { prisma } from "@/config/prisma.js";
 import logger from "@/utils/logger.js";
 import { rabbitMQ } from "@/infrastructure/rabbitmq/index.js";
-
-const prisma = new PrismaClient();
 
 export const startAutoCancelJob = () => {
   // Chạy mỗi phút 1 lần

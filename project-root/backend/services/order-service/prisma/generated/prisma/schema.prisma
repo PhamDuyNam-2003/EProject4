@@ -40,32 +40,32 @@ enum RefundStatus {
 }
 
 model Booking {
-  id              String        @id @default(uuid()) @db.Uuid
-  bookingCode     String        @unique @map("booking_code") @db.VarChar(50)
-  userId          String        @map("user_id") @db.Uuid
-  hotelId         String        @map("hotel_id") @db.Uuid
-  checkInDate     DateTime      @map("check_in_date") @db.Date
-  checkOutDate    DateTime      @map("check_out_date") @db.Date
-  totalNights     Int           @map("total_nights")
-  
-  roomPrice       Decimal       @map("room_price") @db.Decimal(12, 2)
-  taxAmount       Decimal       @map("tax_amount") @db.Decimal(12, 2)
-  discountAmount  Decimal       @default(0) @map("discount_amount") @db.Decimal(12, 2)
-  finalAmount     Decimal       @map("final_amount") @db.Decimal(12, 2)
-  
-  status          BookingStatus @default(PENDING)
-  paymentStatus   PaymentStatus @default(UNPAID) @map("payment_status")
-  
-  createdAt       DateTime      @default(now()) @map("created_at")
-  updatedAt       DateTime      @updatedAt @map("updated_at")
+  id           String   @id @default(uuid()) @db.Uuid
+  bookingCode  String   @unique @map("booking_code") @db.VarChar(50)
+  userId       String   @map("user_id") @db.Uuid
+  hotelId      String   @map("hotel_id") @db.Uuid
+  checkInDate  DateTime @map("check_in_date") @db.Date
+  checkOutDate DateTime @map("check_out_date") @db.Date
+  totalNights  Int      @map("total_nights")
 
-  rooms             BookingRoom[]
-  guestInfo         GuestInfo?
-  histories         BookingHistory[]
+  roomPrice      Decimal @map("room_price") @db.Decimal(12, 2)
+  taxAmount      Decimal @map("tax_amount") @db.Decimal(12, 2)
+  discountAmount Decimal @default(0) @map("discount_amount") @db.Decimal(12, 2)
+  finalAmount    Decimal @map("final_amount") @db.Decimal(12, 2)
+
+  status        BookingStatus @default(PENDING)
+  paymentStatus PaymentStatus @default(UNPAID) @map("payment_status")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  rooms              BookingRoom[]
+  guestInfo          GuestInfo?
+  histories          BookingHistory[]
   paymentTransaction PaymentTransaction?
-  invoice           Invoice?
-  refundRequests    RefundRequest[]
-  appliedPromotion  BookingPromotion?
+  invoice            Invoice?
+  refundRequests     RefundRequest[]
+  appliedPromotion   BookingPromotion?
 
   @@map("bookings")
 }
@@ -78,7 +78,7 @@ model BookingRoom {
   pricePerNight Decimal @map("price_per_night") @db.Decimal(12, 2)
   quantity      Int     @default(1)
 
-  booking       Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@map("booking_rooms")
 }
@@ -91,7 +91,7 @@ model GuestInfo {
   phoneNumber     String  @map("phone_number") @db.VarChar(20)
   specialRequests String? @map("special_requests") @db.Text
 
-  booking         Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@map("guest_info")
 }
@@ -104,7 +104,7 @@ model BookingHistory {
   createdBy String?  @map("created_by") @db.Uuid // Có thể là system hoặc userId
   createdAt DateTime @default(now()) @map("created_at")
 
-  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@map("booking_histories")
 }
@@ -120,7 +120,7 @@ model PaymentTransaction {
   rawData       Json?           @map("raw_data") // Lưu toàn bộ payload webhook
   createdAt     DateTime        @default(now()) @map("created_at")
 
-  booking       Booking         @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@map("payment_transactions")
 }
@@ -132,7 +132,7 @@ model Invoice {
   pdfUrl        String?  @map("pdf_url") @db.Text
   issuedAt      DateTime @default(now()) @map("issued_at")
 
-  booking       Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@map("invoices")
 }
@@ -151,7 +151,7 @@ model Promotion {
   usedCount     Int           @default(0) @map("used_count")
   isActive      Boolean       @default(true) @map("is_active")
 
-  bookings      BookingPromotion[]
+  bookings BookingPromotion[]
 
   @@map("promotions")
 }
@@ -161,8 +161,8 @@ model BookingPromotion {
   bookingId   String @unique @map("booking_id") @db.Uuid
   promotionId String @map("promotion_id") @db.Uuid
 
-  booking     Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  booking   Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  promotion Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
 
   @@map("booking_promotions")
 }
@@ -178,16 +178,16 @@ model RefundRequest {
   createdAt   DateTime     @default(now()) @map("created_at")
   updatedAt   DateTime     @updatedAt @map("updated_at")
 
-  booking     Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@map("refund_requests")
 }
 
 model CancellationPolicy {
-  id                 String  @id @default(uuid()) @db.Uuid
-  hotelId            String  @map("hotel_id") @db.Uuid
-  daysBeforeCheckIn  Int     @map("days_before_check_in")
-  refundPercentage   Decimal @map("refund_percentage") @db.Decimal(5, 2) // e.g. 100.00, 50.00
-  
+  id                String  @id @default(uuid()) @db.Uuid
+  hotelId           String  @map("hotel_id") @db.Uuid
+  daysBeforeCheckIn Int     @map("days_before_check_in")
+  refundPercentage  Decimal @map("refund_percentage") @db.Decimal(5, 2) // e.g. 100.00, 50.00
+
   @@map("cancellation_policies")
 }
