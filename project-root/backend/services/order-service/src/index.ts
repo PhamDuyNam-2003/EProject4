@@ -1,10 +1,43 @@
-import express from 'express';
-import promotionRouter from './modules/promotion/routes/promotion.route';
+import { env } from "@/config/env.js";
+import { rabbitMQ } from "@/infrastructure/rabbitmq/index.js";
+import app from "@/app.js";
+import logger from "@/utils/logger.js";
+import { startAutoCancelJob } from "@/cron/AutoCancelJob.js";
 
-const app = express();
-app.use(express.json());
+const PORT = env.PORT || 3002;
+const NODE_ENV = env.NODE_ENV;
 
+const startServer = async () => {
+  try {
+    await rabbitMQ.connect();
+    startAutoCancelJob();
 
-app.use('/api/v1/promotions', promotionRouter);
+    const server = app.listen(PORT, () => {
+      logger.info(`Server is running on port ${PORT} env ${NODE_ENV}`);
+    });
 
-app.listen(3002, () => console.log('Order-Promotion Service running on port 3002'));
+    process.on("SIGINT", async () => {
+      logger.info("Đang tắt Server...");
+
+      try {
+        server.close(async () => {
+          logger.info("HTTP Server đã đóng.");
+
+          await rabbitMQ.close();
+
+          logger.info("RabbitMQ đã đóng.");
+
+          process.exit(0);
+        });
+      } catch (error) {
+        logger.error("Lỗi khi shutdown:", error);
+        process.exit(1);
+      }
+    });
+  } catch (error) {
+    logger.error("Lỗi khởi động Server:", error);
+    process.exit(1);
+  }
+};
+
+void startServer();
