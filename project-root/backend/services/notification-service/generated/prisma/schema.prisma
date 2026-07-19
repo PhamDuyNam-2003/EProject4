@@ -33,14 +33,14 @@ model NotificationTemplate {
 // 2. DEVICE TOKEN
 // ============================================================
 model DeviceToken {
-  id          String    @id @default(uuid()) @db.Uuid
-  userId      String    @map("user_id") @db.Uuid
-  token       String    @unique @db.VarChar(255)
-  deviceType  String?   @map("device_type") @db.VarChar(50)
-  isActive    Boolean   @default(true) @map("is_active")
-  lastUsedAt  DateTime? @map("last_used_at")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  token      String    @unique @db.VarChar(255)
+  deviceType String?   @map("device_type") @db.VarChar(50)
+  isActive   Boolean   @default(true) @map("is_active")
+  lastUsedAt DateTime? @map("last_used_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
 
   @@map("device_tokens")
 }
@@ -109,4 +109,3 @@ model SmsLog {
 
   @@map("sms_logs")
 }
-

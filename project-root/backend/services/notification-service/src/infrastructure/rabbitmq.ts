@@ -1,4 +1,4 @@
-import amqp from "amqplib";
+import * as amqp from "amqplib";
 import { env } from "../config/env.js";
 
 export const QUEUES = {
@@ -9,8 +9,8 @@ export const QUEUES = {
 } as const;
 
 export class RabbitMQConnection {
-  private connection: amqp.Connection | null = null;
-  private channel: amqp.Channel | null = null;
+  private connection: any = null;
+  private channel: any = null;
   private isConnecting = false;
 
   async connect(maxRetries = 10, delay = 3000): Promise<void> {
@@ -24,7 +24,6 @@ export class RabbitMQConnection {
         this.connection = await amqp.connect(env.RABBITMQ_URL);
         this.channel = await this.connection.createChannel();
 
-        // Assert queues we need
         await this.channel.assertQueue(QUEUES.BOOKING_CREATED, { durable: true });
         await this.channel.assertQueue(QUEUES.BOOKING_CANCELLED, { durable: true });
         await this.channel.assertQueue(QUEUES.SMS_OTP, { durable: true });
@@ -33,7 +32,6 @@ export class RabbitMQConnection {
         console.log("[RabbitMQ] Connected successfully!");
         this.isConnecting = false;
 
-        // Handle connection close
         this.connection.on("close", () => {
           console.warn("[RabbitMQ] Connection closed. Reconnecting...");
           this.connection = null;
@@ -41,7 +39,7 @@ export class RabbitMQConnection {
           this.connect().catch(console.error);
         });
 
-        this.connection.on("error", (err) => {
+        this.connection.on("error", (err: any) => {
           console.error("[RabbitMQ] Connection error:", err);
         });
 
@@ -56,13 +54,13 @@ export class RabbitMQConnection {
         }
 
         await new Promise((resolve) => setTimeout(resolve, delay));
-        delay = Math.min(delay * 2, 30000); // Exponential backoff
+        delay = Math.min(delay * 2, 30000);
       }
     }
     this.isConnecting = false;
   }
 
-  private getChannel(): amqp.Channel {
+  private getChannel(): any {
     if (!this.channel) {
       throw new Error("[RabbitMQ] Channel not initialized. Call connect() first.");
     }
@@ -72,7 +70,7 @@ export class RabbitMQConnection {
   async sendToQueue<T>(
     queueName: string,
     data: T,
-    options?: amqp.Options.Publish
+    options?: any
   ): Promise<void> {
     const channel = this.getChannel();
     channel.sendToQueue(queueName, Buffer.from(JSON.stringify(data)), {
@@ -83,7 +81,7 @@ export class RabbitMQConnection {
 
   async consumeQueue(
     queueName: string,
-    onMessage: (msg: amqp.ConsumeMessage | null) => Promise<void> | void
+    onMessage: (msg: any) => Promise<void> | void
   ): Promise<void> {
     const channel = this.getChannel();
     await channel.prefetch(1);
@@ -92,11 +90,11 @@ export class RabbitMQConnection {
     });
   }
 
-  ack(msg: amqp.ConsumeMessage): void {
+  ack(msg: any): void {
     this.getChannel().ack(msg);
   }
 
-  nack(msg: amqp.ConsumeMessage, requeue = true): void {
+  nack(msg: any, requeue = true): void {
     this.getChannel().nack(msg, false, requeue);
   }
 

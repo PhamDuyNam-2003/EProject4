@@ -129,12 +129,6 @@ services:
       - notification_db
       - rabbitmq
 
-volumes:
-  identity_pgdata:
-  inventory_pgdata:
-  auth_pgdata:
-  notification_pgdata:
-
   analytics_db:
     image: postgres:15-alpine
     container_name: analytics_postgres_dev
@@ -168,9 +162,55 @@ volumes:
       - analytics_db
       - rabbitmq
 
+  mongodb:
+    image: mongo:6.0
+    container_name: hotel_mongodb_dev
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: adminpassword
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+
+  mongoexpress:
+    image: mongo-express
+    container_name: hotel_mongoexpress_dev
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: adminpassword
+      ME_CONFIG_MONGODB_URL: mongodb://admin:adminpassword@mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: adminpassword
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+
+  operation_api:
+    build:
+      context: ./operation-service
+      dockerfile: Dockerfile
+    container_name: operation_api_dev
+    restart: unless-stopped
+    ports:
+      - "3006:3006"
+    env_file:
+      - ./operation-service/.env
+    environment:
+      - MONGO_URI=mongodb://admin:adminpassword@mongodb:27017/operation_db?authSource=admin
+    volumes:
+      - ./operation-service:/app
+      - /app/node_modules
+    depends_on:
+      - mongodb
+
 volumes:
   identity_pgdata:
   inventory_pgdata:
   auth_pgdata:
   notification_pgdata:
   analytics_pgdata:
+  mongodb_data:

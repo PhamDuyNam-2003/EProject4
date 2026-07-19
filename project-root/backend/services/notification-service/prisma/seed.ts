@@ -1,6 +1,19 @@
 import { PrismaClient } from "../generated/prisma/index.js";
+import { PrismaPg } from "@prisma/adapter-pg";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const prisma = new PrismaClient();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, "..", ".env") });
+
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL || "",
+});
+
+const prisma = new PrismaClient({ adapter });
+
 
 async function main() {
   console.log("Seeding notification templates...");
