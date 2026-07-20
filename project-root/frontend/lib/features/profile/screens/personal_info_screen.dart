@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/auth_service.dart';
+
 class PersonalInfoScreen extends StatelessWidget {
   const PersonalInfoScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final user = AuthService.instance.currentUser;
+    final userName = user?.fullName ?? '';
+    final userEmail = user?.email ?? '';
+    final userPhone = user?.phoneNumber ?? '';
+    final userAddress = user?.address ?? '';
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
@@ -26,8 +33,8 @@ class PersonalInfoScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(color: const Color(0xFFFFD700), width: 3),
-                      image: const DecorationImage(
-                        image: NetworkImage('https://ui-avatars.com/api/?name=Nguyen+Khach&background=1E3A8A&color=fff&size=128'),
+                      image: DecorationImage(
+                        image: NetworkImage(user?.avatarUrl ?? 'https://ui-avatars.com/api/?name=${userName.isNotEmpty ? userName : 'K'}&background=1E3A8A&color=fff&size=128'),
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -49,13 +56,13 @@ class PersonalInfoScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 32),
-            _buildTextField('Full Name', 'Nguyễn Văn Khách'),
+            _buildTextField('Full Name', userName),
             const SizedBox(height: 16),
-            _buildTextField('Email', 'khachhangvip@example.com'),
+            _buildTextField('Email', userEmail),
             const SizedBox(height: 16),
-            _buildTextField('Phone Number', '+84 987 654 321'),
+            _buildTextField('Phone Number', userPhone),
             const SizedBox(height: 16),
-            _buildTextField('Address', 'Vinhome Central Park, HCMC'),
+            _buildTextField('Address', userAddress),
             const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,

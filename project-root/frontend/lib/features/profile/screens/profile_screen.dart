@@ -7,10 +7,19 @@ import 'settings_screen.dart';
 import 'rewards_screen.dart';
 import 'referral_screen.dart';
 import 'help_center_screen.dart';
+import 'analytics_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+import '../../../core/auth_service.dart';
+import '../../auth/screens/login_screen.dart';
+
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -95,6 +104,11 @@ class ProfileScreen extends StatelessWidget {
                   title: tr('Notifications'),
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationsScreen())),
                 ),
+                _MenuItem(
+                  icon: Icons.bar_chart, 
+                  title: tr('Analytics Dashboard'),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AnalyticsScreen())),
+                ),
               ],
             ),
             const SizedBox(height: 24),
@@ -134,6 +148,10 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildProfileHeader(BuildContext context) {
+    final user = AuthService.instance.currentUser;
+    final userName = user?.profile?.fullName ?? 'Khách';
+    final userInitial = userName.isNotEmpty ? userName[0].toUpperCase() : 'K';
+    
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -164,8 +182,8 @@ class ProfileScreen extends StatelessWidget {
                       spreadRadius: 2,
                     ),
                   ],
-                  image: const DecorationImage(
-                    image: NetworkImage('https://ui-avatars.com/api/?name=Nguyen+Khach&background=1E3A8A&color=fff&size=128'),
+                  image: DecorationImage(
+                    image: NetworkImage(user?.profile?.avatarUrl ?? 'https://ui-avatars.com/api/?name=$userName&background=1E3A8A&color=fff&size=128'),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -175,9 +193,9 @@ class ProfileScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Nguyễn Văn Khách',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    Text(
+                      userName,
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     Container(
@@ -328,7 +346,16 @@ class ProfileScreen extends StatelessWidget {
         width: double.infinity,
         height: 56,
         child: OutlinedButton(
-          onPressed: () {},
+          onPressed: () async {
+            await AuthService.instance.logout();
+            if (mounted) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
+                (route) => false,
+              );
+            }
+          },
           style: OutlinedButton.styleFrom(
             foregroundColor: Colors.red,
             side: const BorderSide(color: Colors.red),

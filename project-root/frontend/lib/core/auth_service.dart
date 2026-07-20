@@ -1,13 +1,13 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:dio/dio.dart';
-import 'dart:convert';
 import '../data/models/user_model.dart';
+import '../config/constants.dart';
 
 class AuthService {
   static final AuthService instance = AuthService._internal();
   AuthService._internal() {
     _dio = Dio(BaseOptions(
-      baseUrl: 'http://localhost:3000/api/v1',
+      baseUrl: AppConstants.baseUrl,
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
     ));
@@ -60,9 +60,10 @@ class AuthService {
 
     try {
       final response = await _dio.post('/auth/refresh', data: {'refreshToken': refreshToken});
-      if (response.statusCode == 200) {
-        final newAccessToken = response.data['accessToken'];
-        final newRefreshToken = response.data['refreshToken'];
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        final data = response.data;
+        final newAccessToken = data['data']['tokens']['accessToken'];
+        final newRefreshToken = data['data']['tokens']['refreshToken'];
         await _storage.write(key: 'access_token', value: newAccessToken);
         await _storage.write(key: 'refresh_token', value: newRefreshToken);
         return true;
@@ -75,39 +76,103 @@ class AuthService {
 
   Future<void> login(String email, String password) async {
     try {
-      // Gọi API đăng nhập (Giả lập nếu BE chưa sẵn sàng)
-      // final response = await _dio.post('/auth/login', data: {'email': email, 'password': password});
-      // final data = response.data;
+      final response = await _dio.post('/auth/login', data: {'email': email, 'password': password});
+      final data = response.data;
       
-      // Giả lập Dữ liệu
-      await Future.delayed(const Duration(seconds: 2));
-      if (email == 'admin@gmail.com' && password == '123456') {
-        await _storage.write(key: 'access_token', value: 'fake_access_token');
-        await _storage.write(key: 'refresh_token', value: 'fake_refresh_token');
+      if (data['success'] == true) {
+        final accessToken = data['data']['tokens']['accessToken'];
+        final refreshToken = data['data']['tokens']['refreshToken'];
+        final user = data['data']['user'];
         
-        _currentUser = UserModel(
-          id: '123',
-          email: email,
-          role: Role.USER,
-          status: UserStatus.ACTIVE,
-          loginAttempts: 0,
-          createdAt: DateTime.now(),
-        );
+        await _storage.write(key: 'access_token', value: accessToken);
+        await _storage.write(key: 'refresh_token', value: refreshToken);
+        
+        _currentUser = UserModel.fromJson(user);
       } else {
-        throw Exception('Sai email hoặc mật khẩu');
+        throw Exception(data['message'] ?? 'Đăng nhập thất bại');
       }
     } catch (e) {
+      if (e is DioException && e.response != null) {
+         throw Exception(e.response?.data['message'] ?? 'Lỗi đăng nhập');
+      }
       throw Exception('Lỗi đăng nhập: ${e.toString()}');
     }
   }
 
-  Future<void> register(String name, String email, String password) async {
+  Future<void> sendOtp(String email) async {
     try {
-      await Future.delayed(const Duration(seconds: 2));
-      // Tương lai kết nối API:
-      // await _dio.post('/auth/register', data: {'name': name, 'email': email, 'password': password});
+      final response = await _dio.post('/auth/send-otp', data: {'email': email});
+      final data = response.data;
+      if (data['success'] != true) {
+         throw Exception(data['message'] ?? 'Gửi OTP thất bại');
+      }
     } catch (e) {
-      throw Exception('Lỗi đăng ký: ${e.toString()}');
+      if (e is DioException && e.response != null) {
+         throw Exception(e.response?.data['message'] ?? 'Lỗi gửi OTP');
+      }
+      throw Exception('Lỗi gửi OTP: ${e.toString()}');
+    }
+  }
+
+  Future<void> verifyOtp(String email, String otp) async {
+    try {
+      final response = await _dio.post('/auth/verify-otp', data: {'email': email, 'otp': otp});
+      final data = response.data;
+      
+      if (data['success'] == true) {
+        final accessToken = data['data']['tokens']['accessToken'];
+        final refreshToken = data['data']['tokens']['refreshToken'];
+        final user = data['data']['user'];
+        
+        await _storage.write(key: 'access_token', value: accessToken);
+        await _storage.write(key: 'refresh_token', value: refreshToken);
+        _currentUser = UserModel.fromJson(user);
+      } else {
+        throw Exception(data['message'] ?? 'Xác thực OTP thất bại');
+      }
+    } catch (e) {
+      if (e is DioException && e.response != null) {
+         throw Exception(e.response?.data['message'] ?? 'Lỗi xác thực OTP');
+      }
+      throw Exception('Lỗi xác thực OTP: ${e.toString()}');
+    }
+  }
+
+  Future<void> setPassword(String newPassword) async {
+    try {
+      final response = await _dio.post('/auth/change-password', data: {'newPassword': newPassword});
+      final data = response.data;
+      if (data['success'] != true) {
+         throw Exception(data['message'] ?? 'Lỗi tạo mật khẩu');
+      }
+    } catch (e) {
+      if (e is DioException && e.response != null) {
+         throw Exception(e.response?.data['message'] ?? 'Lỗi tạo mật khẩu');
+      }
+      throw Exception('Lỗi tạo mật khẩu: ${e.toString()}');
+    }
+  }
+
+  Future<void> resetPassword({
+    required String email,
+    required String otp,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await _dio.post('/auth/reset-password', data: {
+        'email': email,
+        'otp': otp,
+        'newPassword': newPassword,
+      });
+      final data = response.data;
+      if (data['success'] != true) {
+         throw Exception(data['message'] ?? 'Đặt lại mật khẩu thất bại');
+      }
+    } catch (e) {
+      if (e is DioException && e.response != null) {
+         throw Exception(e.response?.data['message'] ?? 'Lỗi đặt lại mật khẩu');
+      }
+      throw Exception('Lỗi đặt lại mật khẩu: ${e.toString()}');
     }
   }
 

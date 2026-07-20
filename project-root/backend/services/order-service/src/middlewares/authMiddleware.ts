@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { UnauthorizedError } from "@/utils/errors/errorCustomize";
 import jwt from "jsonwebtoken";
-import { Role } from "../../generated/prisma";
 
 const JWT_SECRET = process.env.JWT_SECRET || "bi_mat_nhe";
 
@@ -22,7 +21,7 @@ export const requireOwnershipOrAdmin  = (
 ) => {
     const {id} = req.params;
 
-    if(req.user?.role !== Role.ADMIN && req.user?.userId !== id){
+    if(req.user?.role !== "ADMIN" && req.user?.userId !== id){
         return next(
           new UnauthorizedError(
             "Bạn không có quyền thao tác trên tài khoản của người khác.",

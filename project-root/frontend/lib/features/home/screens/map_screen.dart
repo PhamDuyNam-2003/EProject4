@@ -45,33 +45,7 @@ class _MapScreenState extends State<MapScreen> {
               ),
               // MarkerLayer hiển thị các Khách sạn
               MarkerLayer(
-                markers: widget.hotels
-                    .where((h) => h.latitude != null && h.longitude != null)
-                    .map((hotel) {
-                  final isSelected = _selectedHotel?.id == hotel.id;
-                  return Marker(
-                    width: 40.0,
-                    height: 40.0,
-                    point: LatLng(hotel.latitude!, hotel.longitude!),
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedHotel = hotel;
-                        });
-                        // Di chuyển trung tâm map tới vị trí chọn
-                        _mapController.move(
-                          LatLng(hotel.latitude!, hotel.longitude!),
-                          13.0,
-                        );
-                      },
-                      child: Icon(
-                        Icons.location_on,
-                        size: isSelected ? 40.0 : 30.0,
-                        color: isSelected ? Colors.red : Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                  );
-                }).toList(),
+                markers: [],
               ),
             ],
           ),

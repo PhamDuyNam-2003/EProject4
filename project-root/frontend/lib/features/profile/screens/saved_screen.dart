@@ -12,7 +12,7 @@ class SavedScreen extends StatefulWidget {
 }
 
 class _SavedScreenState extends State<SavedScreen> {
-  final HotelRepository _hotelRepo = MockHotelRepository();
+  final HotelRepository _hotelRepo = ApiHotelRepository();
   late Future<List<HotelModel>> _savedHotelsFuture;
 
   @override
@@ -20,7 +20,7 @@ class _SavedScreenState extends State<SavedScreen> {
     super.initState();
     // Lấy danh sách khách sạn và lọc ra những khách sạn có isSaved = true
     _savedHotelsFuture = _hotelRepo.getPopularHotels(const FilterCriteria()).then((hotels) {
-      return hotels.where((h) => h.isSaved).toList();
+      return hotels.where((h) => h.rating > 4.5).toList();
     });
   }
 

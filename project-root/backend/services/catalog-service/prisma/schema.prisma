@@ -7,12 +7,27 @@ generator client {
 }
 
 model Hotel {
-  id          String   @id @default(uuid())
-  name        String
-  address     String
-  description String?
-  rating      Float    @default(5.0)
-  priceFrom   Float
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                  String   @id @default(uuid())
+  name                String
+  city                String
+  district            String
+  address             String
+  description         String?
+  price               Float
+  rating              Float    @default(5.0)
+  reviewScore         Float    @default(9.0)
+  reviewCount         Int      @default(0)
+  category            String
+  distanceToCenter    Float
+  nearPublicTransport Boolean  @default(false)
+  petFriendly         Boolean  @default(false)
+  maxAdults           Int      @default(2)
+  maxKids             Int      @default(0)
+  bedrooms            Int      @default(1)
+  amenities           String[]
+  roomFeatures        String[]
+  policies            String[]
+  images              String[]
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }

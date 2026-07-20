@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/app_settings.dart';
 import '../../../core/auth_service.dart';
 import '../../../core/responsive_wrapper.dart';
+import '../../../config/constants.dart';
 import '../../../main.dart'; // import MainNavigationScreen
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
@@ -67,18 +68,18 @@ class _LoginScreenState extends State<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Logo
-                    const Icon(Icons.hotel_class, size: 80, color: Colors.blue),
+                    const Icon(Icons.hotel_class, size: 80, color: Color(0xFFD4AF37)),
                     const SizedBox(height: 24),
                     Text(
                       tr('Welcome Back!'),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       tr('Log in to your account to continue'),
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+                      style: TextStyle(fontSize: 16, color: Colors.grey.shade400),
                     ),
                     const SizedBox(height: 48),
 
@@ -86,10 +87,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
+                      style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
                         labelText: tr('Email'),
-                        prefixIcon: const Icon(Icons.email_outlined),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        labelStyle: const TextStyle(color: Colors.white70),
+                        prefixIcon: const Icon(Icons.email_outlined, color: Colors.white70),
+                        filled: true,
+                        fillColor: AppConstants.cardColor,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -107,16 +112,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
+                      style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
                         labelText: tr('Password'),
-                        prefixIcon: const Icon(Icons.lock_outline),
+                        labelStyle: const TextStyle(color: Colors.white70),
+                        prefixIcon: const Icon(Icons.lock_outline, color: Colors.white70),
                         suffixIcon: IconButton(
-                          icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                          icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Colors.white70),
                           onPressed: () {
                             setState(() => _obscurePassword = !_obscurePassword);
                           },
                         ),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        filled: true,
+                        fillColor: AppConstants.cardColor,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -136,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: () {
                           Navigator.push(context, MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()));
                         },
-                        child: Text(tr('Forgot Password?')),
+                        child: Text(tr('Forgot Password?'), style: const TextStyle(color: Color(0xFFD4AF37))),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -145,7 +154,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     ElevatedButton(
                       onPressed: _isLoading ? null : _login,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        backgroundColor: AppConstants.primaryColor,
+                        foregroundColor: AppConstants.backgroundColor,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
@@ -153,11 +163,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           ? const SizedBox(
                               width: 24,
                               height: 24,
-                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            child: CircularProgressIndicator(color: Color(0xFF0F172A), strokeWidth: 2),
                             )
                           : Text(
                               tr('Log In'),
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                             ),
                     ),
                     const SizedBox(height: 24),
@@ -165,12 +175,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     // Social Login
                     Row(
                       children: [
-                        Expanded(child: Divider(color: Colors.grey.shade300)),
+                        Expanded(child: Divider(color: Colors.grey.shade700)),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Text(tr('Or continue with'), style: TextStyle(color: Colors.grey.shade600)),
+                          child: Text(tr('Or continue with'), style: TextStyle(color: Colors.grey.shade400)),
                         ),
-                        Expanded(child: Divider(color: Colors.grey.shade300)),
+                        Expanded(child: Divider(color: Colors.grey.shade700)),
                       ],
                     ),
                     const SizedBox(height: 24),

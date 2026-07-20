@@ -5,14 +5,14 @@ import 'package:flutter/material.dart';
 class AppConstants {
 
   static String get baseUrl {
-    if (kIsWeb) return 'https://localhost:7247/api/v1'; 
-    if (Platform.isAndroid) return 'https://10.0.2.2:7247/api/v1';
-    return 'https://localhost:7247/api/v1';
+    if (kIsWeb) return 'http://localhost:8080/api'; 
+    if (Platform.isAndroid) return 'http://10.0.2.2:8080/api';
+    return 'http://localhost:8080/api';
   }
 
-  static const Color primaryColor = Color(0xFF6C63FF);
-  static const Color secondaryColor = Color(0xFFF85F6A);
-  static const Color backgroundColor = Color(0xFF1E1E2C);
-  static const Color cardColor = Color(0xFF2D2D44);
+  static const Color primaryColor = Color(0xFFD4AF37); // Champagne Gold
+  static const Color secondaryColor = Color(0xFFF1F5F9); // Slate 100
+  static const Color backgroundColor = Color(0xFF0F172A); // Deep Navy
+  static const Color cardColor = Color(0xFF1E293B); // Slate 800
   static const Color textColor = Colors.white;
 }

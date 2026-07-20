@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/config/prisma.js';
 
 export const createPromotion = async (data: any) => {
   return await prisma.promotion.create({ data });
@@ -19,13 +17,13 @@ export const validateVoucher = async (code: string, originalPrice: number) => {
   }
 
   let discountAmount = 0;
-  if (voucher.discountType === 'PERCENTAGE') {
-    discountAmount = (originalPrice * voucher.discountValue) / 100;
-    if (voucher.maxDiscount && discountAmount > voucher.maxDiscount) {
-      discountAmount = voucher.maxDiscount;
+  if (voucher.discountType === 'PERCENT') {
+    discountAmount = (originalPrice * voucher.discountValue.toNumber()) / 100;
+    if (voucher.maxDiscount && discountAmount > voucher.maxDiscount.toNumber()) {
+      discountAmount = voucher.maxDiscount.toNumber();
     }
-  } else if (voucher.discountType === 'FIXED') {
-    discountAmount = voucher.discountValue;
+  } else if (voucher.discountType === 'FIXED_AMOUNT') {
+    discountAmount = voucher.discountValue.toNumber();
   }
 
   if (discountAmount > originalPrice) discountAmount = originalPrice;

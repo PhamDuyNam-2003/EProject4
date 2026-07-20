@@ -6,7 +6,7 @@ import { successResponse } from "@/utils/response.js";
 export class BookingController {
   public createBooking = asyncHandler(async (req: Request, res: Response) => {
     // In a real app, userId should come from req.user (after auth middleware)
-    const userId = req.user?.id || "00000000-0000-0000-0000-000000000000"; 
+    const userId = req.user?.userId || "00000000-0000-0000-0000-000000000000"; 
     const { hotelId, checkInDate, checkOutDate, rooms, guestInfo } = req.body;
 
     const booking = await bookingService.createBooking({

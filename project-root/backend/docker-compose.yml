@@ -1,0 +1,234 @@
+version: '3.8'
+
+services:
+  identity_db:
+    image: postgres:15-alpine
+    container_name: identity_postgres_dev
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "123456"
+      POSTGRES_DB: identity_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - identity_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  inventory_db:
+    image: postgres:15-alpine
+    container_name: inventory_postgres_dev
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: inventory_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - inventory_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  order_db:
+    image: postgres:15-alpine
+    container_name: order_postgres_dev
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "123456"
+      POSTGRES_DB: order_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - order_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  analytics_db:
+    image: postgres:15-alpine
+    container_name: analytics_postgres_dev
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "123456"
+      POSTGRES_DB: analytics_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - analytics_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  notification_db:
+    image: postgres:15-alpine
+    container_name: notification_postgres_dev
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "123456"
+      POSTGRES_DB: notification_db
+    ports:
+      - "5437:5432"
+    volumes:
+      - notification_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  global_redis:
+    image: redis:7-alpine
+    container_name: global_redis_dev
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: global_rabbitmq_dev
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    restart: unless-stopped
+
+  auth_api:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: auth_api_dev
+    command: npm run dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:123456@identity_db:5432/identity_db?schema=public
+      - REDIS_HOST=global_redis
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+    volumes:
+      - ./services/auth-service:/app
+      - /app/node_modules
+    depends_on:
+      - identity_db
+      - global_redis
+      - rabbitmq
+
+  order_api:
+    build:
+      context: ./services/order-service
+      dockerfile: Dockerfile
+    container_name: order_api_dev
+    command: npm run dev
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      - DATABASE_URL=postgresql://postgres:123456@order_db:5432/order_db?schema=public
+      - REDIS_HOST=global_redis
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+    volumes:
+      - ./services/order-service:/app
+      - /app/node_modules
+    depends_on:
+      - order_db
+      - global_redis
+      - rabbitmq
+
+  analytics_api:
+    build:
+      context: ./services/analytics-service
+      dockerfile: Dockerfile
+    container_name: analytics_api_dev
+    restart: unless-stopped
+    ports:
+      - "3003:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=analytics_db;Port=5432;Database=analytics_db;Username=postgres;Password=123456
+      - ConnectionStrings__RabbitMQ=amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      - analytics_db
+      - rabbitmq
+
+  notification_api:
+    build:
+      context: ./services/notification-service
+      dockerfile: Dockerfile
+    container_name: notification_api_dev
+    command: npm run dev
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
+    environment:
+      - DATABASE_URL=postgresql://postgres:123456@notification_db:5432/notification_db?schema=public
+      - REDIS_HOST=global_redis
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+    volumes:
+      - ./services/notification-service:/app
+      - /app/node_modules
+    depends_on:
+      - notification_db
+      - global_redis
+      - rabbitmq
+
+  catalog_api:
+    build:
+      context: ./services/catalog-service
+      dockerfile: Dockerfile
+    container_name: catalog_api_dev
+    command: npm run dev
+    restart: unless-stopped
+    ports:
+      - "3005:3005"
+    environment:
+      - DATABASE_URL=postgresql://postgres:123@inventory_db:5432/inventory_db?schema=public
+      - REDIS_HOST=global_redis
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+    volumes:
+      - ./services/catalog-service:/app
+      - /app/node_modules
+    depends_on:
+      - inventory_db
+      - global_redis
+      - rabbitmq
+
+  api_gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api_gateway_dev
+    command: npm run dev
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - AUTH_SERVICE_URL=http://auth_api:3000
+      - ORDER_SERVICE_URL=http://order_api:3002
+      - ANALYTICS_SERVICE_URL=http://analytics_api:8080
+      - NOTIFICATION_SERVICE_URL=http://notification_api:3004
+      - CATALOG_SERVICE_URL=http://catalog_api:3005
+    volumes:
+      - ./api-gateway:/app
+      - /app/node_modules
+    depends_on:
+      - auth_api
+      - order_api
+      - analytics_api
+      - notification_api
+      - catalog_api
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: global_pgadmin_dev
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - identity_db
+      - inventory_db
+      - order_db
+      - analytics_db
+      - notification_db
+    restart: unless-stopped
+
+volumes:
+  identity_pgdata:
+  inventory_pgdata:
+  order_pgdata:
+  analytics_pgdata:
+  notification_pgdata:

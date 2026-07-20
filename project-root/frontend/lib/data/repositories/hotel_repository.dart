@@ -1,6 +1,9 @@
 import '../models/hotel_model.dart';
 import '../models/filter_criteria.dart';
 import '../mock/mock_database.dart';
+import 'package:dio/dio.dart';
+import '../../core/app_settings.dart';
+import '../../core/app_constants.dart';
 
 abstract class HotelRepository {
   Future<List<HotelModel>> getPopularHotels(FilterCriteria criteria);
@@ -95,13 +98,43 @@ class MockHotelRepository implements HotelRepository {
 }
 
 class ApiHotelRepository implements HotelRepository {
+  final Dio _dio;
+
+  ApiHotelRepository() : _dio = Dio(BaseOptions(
+    baseUrl: AppConstants.baseUrl,
+    connectTimeout: const Duration(seconds: 10),
+    receiveTimeout: const Duration(seconds: 10),
+  ));
+
   @override
   Future<HotelModel?> getHotelById(String id) async {
-    throw UnimplementedError('Chưa nối API thật. Vui lòng dùng MockHotelRepository');
+    try {
+      final response = await _dio.get('/hotels/$id');
+      if (response.statusCode == 200 && response.data['success']) {
+        return HotelModel.fromJson(response.data['data']);
+      }
+      return null;
+    } catch (e) {
+      print('Error fetching hotel by id: $e');
+      return null;
+    }
   }
 
   @override
   Future<List<HotelModel>> getPopularHotels(FilterCriteria criteria) async {
-    throw UnimplementedError('Chưa nối API thật. Vui lòng dùng MockHotelRepository');
+    try {
+      final response = await _dio.get('/hotels', queryParameters: {
+        if (criteria.query.isNotEmpty) 'search': criteria.query,
+      });
+      
+      if (response.statusCode == 200 && response.data['success']) {
+        final List<dynamic> data = response.data['data'];
+        return data.map((json) => HotelModel.fromJson(json)).toList();
+      }
+      return [];
+    } catch (e) {
+      print('Error fetching hotels: $e');
+      return [];
+    }
   }
 }

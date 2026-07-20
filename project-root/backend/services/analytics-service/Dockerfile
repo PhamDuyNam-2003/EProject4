@@ -1,20 +1,16 @@
-FROM node:20-alpine
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
 
-WORKDIR /app
+COPY ["AnalyticsService.csproj", "./"]
+RUN dotnet restore "./AnalyticsService.csproj"
 
-# Copy package files and prisma schema first to optimise layer caching
-COPY package*.json ./
-COPY prisma ./prisma/
-
-# Install dependencies
-RUN npm install
-
-# Generate Prisma Client
-RUN npx prisma generate
-
-# Copy rest of the source code
 COPY . .
+RUN dotnet publish "AnalyticsService.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-EXPOSE 3005
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+WORKDIR /app
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
 
-CMD ["npm", "run", "dev"]
+COPY --from=build /app/publish .
+ENTRYPOINT ["dotnet", "AnalyticsService.dll"]
