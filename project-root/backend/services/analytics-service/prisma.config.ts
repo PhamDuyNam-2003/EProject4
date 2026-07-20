@@ -1,5 +1,3 @@
-// Prisma 7 config — connection URL được khai báo ở đây thay vì schema.prisma
-// npm install --save-dev prisma dotenv
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
