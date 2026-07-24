@@ -105,32 +105,23 @@ services:
 # =======================================================
 # 2. MICROSERVICES
 # =======================================================
-  auth_api:
+  identity_api:
     build:
-      context: ./services/auth-service
+      context: ./services/identity-service
       dockerfile: Dockerfile
-    container_name: auth_api_dev
+    container_name: identity_api_dev
     command: npm run dev
     restart: unless-stopped
     ports:
-      - "3000:3000"
-    environment:
-      - DATABASE_URL=postgresql://postgres:123456@identity_db:5432/identity_db?schema=public
-      - REDIS_HOST=global_redis
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
-      - PORT=3000
-      - SMTP_HOST=smtp.gmail.com
-      - SMTP_PORT=587
-      - SMTP_USER=trollmlbbtop@gmail.com
-      - SMTP_PASSWORD=tyvancwfjjzzpexv
-      - CLOUDINARY_URL=cloudinary://dummy:O9YZK1PDjx9cnAfDyMVs1xxSbzI@dummy
+      - "3001:3001"
+    env_file:
+      - ./services/identity-service/.env
     volumes:
-      - ./services/auth-service:/app
+      - ./services/identity-service:/app
       - /app/node_modules
     depends_on:
       - identity_db
       - global_redis
-      - rabbitmq
 
   order_api:
     build:
@@ -151,7 +142,6 @@ services:
       - VNPAY_HASH_SECRET=XNBCJFAKAZQSGTARRLGCHVZWCIOIGSHN
       - VNPAY_URL=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
       - VNPAY_RETURN_URL=http://localhost:3002/api/payment/vnpay/return
-      - CATALOG_SERVICE_URL=http://catalog_api:3005
     volumes:
       - ./services/order-service:/app
       - /app/node_modules
@@ -250,7 +240,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - AUTH_SERVICE_URL=http://auth_api:3000
+      - IDENTITY_SERVICE_URL=http://identity_api:3001
       - ORDER_SERVICE_URL=http://order_api:3002
       - ANALYTICS_SERVICE_URL=http://analytics_api:8080
       - NOTIFICATION_SERVICE_URL=http://notification_api:3004
@@ -260,7 +250,7 @@ services:
       - ./api-gateway:/app
       - /app/node_modules
     depends_on:
-      - auth_api
+      - identity_api
       - order_api
       - analytics_api
       - notification_api

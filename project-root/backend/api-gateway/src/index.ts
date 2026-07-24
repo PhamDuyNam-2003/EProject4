@@ -49,15 +49,15 @@ const setupProxy = (path: string, targetUrl: string) => {
 };
 
 // Định tuyến các microservices (đọc từ env hoặc dùng giá trị mặc định)
-const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || "http://auth_api:3000";
+const IDENTITY_SERVICE_URL = process.env.IDENTITY_SERVICE_URL || "http://identity_api:3001";
 const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL || "http://order_api:3002";
 const ANALYTICS_SERVICE_URL = process.env.ANALYTICS_SERVICE_URL || "http://analytics_api:3003";
 const NOTIFICATION_SERVICE_URL = process.env.NOTIFICATION_SERVICE_URL || "http://notification_api:3004";
 const CATALOG_SERVICE_URL = process.env.CATALOG_SERVICE_URL || "http://catalog_api:3005";
 const OPERATION_SERVICE_URL = process.env.OPERATION_SERVICE_URL || "http://operation_api:3006";
 
-setupProxy("/api/auth", AUTH_SERVICE_URL);
-setupProxy("/api/users", AUTH_SERVICE_URL); // Tùy chọn nếu user thuộc auth-service
+setupProxy("/api/auth", IDENTITY_SERVICE_URL);
+setupProxy("/api/users", IDENTITY_SERVICE_URL); // Tùy chọn nếu user thuộc identity-service
 setupProxy("/api/orders", ORDER_SERVICE_URL);
 setupProxy("/api/bookings", ORDER_SERVICE_URL); // Tùy chọn nếu bookings thuộc order
 setupProxy("/api/payment", ORDER_SERVICE_URL); // Thêm payment
@@ -89,7 +89,7 @@ app.use((req: Request, res: Response) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 API Gateway is running on port ${PORT}`);
-  console.log(`Auth Service     -> ${AUTH_SERVICE_URL}`);
+  console.log(`Identity Service -> ${IDENTITY_SERVICE_URL}`);
   console.log(`Order Service    -> ${ORDER_SERVICE_URL}`);
   console.log(`Analytics Service-> ${ANALYTICS_SERVICE_URL}`);
   console.log(`Operation Service-> ${OPERATION_SERVICE_URL}`);
