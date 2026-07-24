@@ -3,6 +3,7 @@ import '../../../data/models/hotel_model.dart';
 import '../../../data/repositories/hotel_repository.dart';
 import '../../../data/models/filter_criteria.dart';
 import '../../home/widgets/hotel_card.dart';
+import '../../../core/favorite_service.dart';
 
 class SavedScreen extends StatefulWidget {
   const SavedScreen({super.key});
@@ -12,16 +13,9 @@ class SavedScreen extends StatefulWidget {
 }
 
 class _SavedScreenState extends State<SavedScreen> {
-  final HotelRepository _hotelRepo = ApiHotelRepository();
-  late Future<List<HotelModel>> _savedHotelsFuture;
-
   @override
   void initState() {
     super.initState();
-    // Lấy danh sách khách sạn và lọc ra những khách sạn có isSaved = true
-    _savedHotelsFuture = _hotelRepo.getPopularHotels(const FilterCriteria()).then((hotels) {
-      return hotels.where((h) => h.rating > 4.5).toList();
-    });
   }
 
   @override
@@ -29,61 +23,33 @@ class _SavedScreenState extends State<SavedScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        title: const Text('Saved Hotels', style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
-        backgroundColor: Colors.white,
+        title: const Text('Saved Hotels', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
+        centerTitle: false,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         automaticallyImplyLeading: false,
       ),
-      body: FutureBuilder<List<HotelModel>>(
-        future: _savedHotelsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: AnimatedBuilder(
+        animation: FavoriteService.instance,
+        builder: (context, child) {
+          final hotels = FavoriteService.instance.savedHotels;
 
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          if (hotels.isEmpty) {
             return _buildEmptyState();
           }
 
-          final hotels = snapshot.data!;
-          return StatefulBuilder(
-            builder: (context, setInnerState) {
-              return ListView.separated(
-                padding: const EdgeInsets.all(24),
-                itemCount: hotels.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 24),
-                itemBuilder: (context, index) {
-                  final hotel = hotels[index];
-                  return Dismissible(
-                    key: Key(hotel.id),
-                    direction: DismissDirection.endToStart,
-                    onDismissed: (direction) {
-                      setInnerState(() {
-                        hotels.removeAt(index);
-                      });
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${hotel.name} removed from saved list')),
-                      );
-                    },
-                    background: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade400,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 24),
-                      child: const Icon(Icons.delete_outline, color: Colors.white, size: 32),
-                    ),
-                    child: SizedBox(
-                      height: 280,
-                      child: HotelCard(
-                        hotel: hotel,
-                        imageUrl: 'assets/images/hotel_exterior.png',
-                      ),
-                    ),
-                  );
-                },
+          return ListView.separated(
+            padding: const EdgeInsets.all(24),
+            itemCount: hotels.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 24),
+            itemBuilder: (context, index) {
+              final hotel = hotels[index];
+              return SizedBox(
+                height: 280,
+                child: HotelCard(
+                  hotel: hotel,
+                  imageUrl: 'assets/images/hotel_exterior.png',
+                ),
               );
             },
           );

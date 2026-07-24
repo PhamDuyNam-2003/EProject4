@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/filter_criteria.dart';
+import '../../../core/app_settings.dart';
 
 class FilterFullScreen extends StatefulWidget {
   final FilterCriteria initialCriteria;
@@ -31,15 +32,19 @@ class _FilterFullScreenState extends State<FilterFullScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = Theme.of(context).scaffoldBackgroundColor;
+    final textColor = isDark ? Colors.white : Colors.black;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: bgColor,
       appBar: AppBar(
-        title: const Text('Advanced Filters', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(tr('Advanced Filters'), style: TextStyle(fontWeight: FontWeight.bold, color: textColor)),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: bgColor,
         elevation: 1,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.black),
+          icon: Icon(Icons.close, color: textColor),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
@@ -51,7 +56,7 @@ class _FilterFullScreenState extends State<FilterFullScreen> {
                 category: _criteria.category,
               ));
             },
-            child: Text('Clear All', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
+            child: Text(tr('Clear All'), style: TextStyle(color: Theme.of(context).colorScheme.primary)),
           ),
         ],
       ),
@@ -63,12 +68,12 @@ class _FilterFullScreenState extends State<FilterFullScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionHeader('Sort By'),
+                  _buildSectionHeader(tr('Sort By')),
                   _buildSortDropdown(),
                   
                   const Divider(height: 48),
 
-                  _buildSectionHeader('1. Basic Information'),
+                  _buildSectionHeader(tr('1. Basic Information')),
                   _buildPriceRange(),
                   const SizedBox(height: 24),
                   _buildStarRating(),
@@ -77,31 +82,31 @@ class _FilterFullScreenState extends State<FilterFullScreen> {
                   
                   const Divider(height: 48),
                   
-                  _buildSectionHeader('2. Location & Distance'),
+                  _buildSectionHeader(tr('2. Location & Distance')),
                   _buildDistanceSlider(),
                   _buildSwitch(
-                    title: 'Near Public Transport',
-                    subtitle: 'Close to bus station or train station',
+                    title: tr('Near Public Transport'),
+                    subtitle: tr('Close to bus station or train station'),
                     value: _criteria.nearPublicTransport,
                     onChanged: (val) => _updateCriteria(_criteria.copyWith(nearPublicTransport: val)),
                   ),
 
                   const Divider(height: 48),
 
-                  _buildSectionHeader('3. Type & Amenities'),
-                  _buildMultiSelectChips('Popular Amenities', _amenitiesOptions, _criteria.amenities, (val) {
+                  _buildSectionHeader(tr('3. Type & Amenities')),
+                  _buildMultiSelectChips(tr('Popular Amenities'), _amenitiesOptions, _criteria.amenities, (val) {
                     _updateCriteria(_criteria.copyWith(amenities: val));
                   }),
                   const SizedBox(height: 24),
-                  _buildMultiSelectChips('Room Features', _roomFeaturesOptions, _criteria.roomFeatures, (val) {
+                  _buildMultiSelectChips(tr('Room Features'), _roomFeaturesOptions, _criteria.roomFeatures, (val) {
                     _updateCriteria(_criteria.copyWith(roomFeatures: val));
                   }),
 
                   const Divider(height: 48),
 
-                  _buildSectionHeader('4. Booking Policies'),
+                  _buildSectionHeader(tr('Policies')),
                   ..._policiesOptions.map((policy) => _buildCheckbox(
-                    title: policy,
+                    title: tr(policy),
                     value: _criteria.policies.contains(policy),
                     onChanged: (val) {
                       final list = List<String>.from(_criteria.policies);
@@ -116,10 +121,10 @@ class _FilterFullScreenState extends State<FilterFullScreen> {
 
                   const Divider(height: 48),
 
-                  _buildSectionHeader('5. Guests & Rooms'),
-                  _buildCounter('Adults', 'Ages 13 or above', _criteria.adults, (val) => _updateCriteria(_criteria.copyWith(adults: val)), min: 1),
-                  _buildCounter('Children', 'Ages 2-12', _criteria.kids, (val) => _updateCriteria(_criteria.copyWith(kids: val))),
-                  _buildCounter('Bedrooms', '', _criteria.bedrooms, (val) => _updateCriteria(_criteria.copyWith(bedrooms: val)), min: 1),
+                  _buildSectionHeader(tr('Guests & Rooms')),
+                  _buildCounter(tr('Adults'), 'Ages 13 or above', _criteria.adults, (val) => _updateCriteria(_criteria.copyWith(adults: val)), min: 1),
+                  _buildCounter(tr('Children'), 'Ages 2-12', _criteria.kids, (val) => _updateCriteria(_criteria.copyWith(kids: val))),
+                  _buildCounter(tr('Bedrooms'), '', _criteria.bedrooms, (val) => _updateCriteria(_criteria.copyWith(bedrooms: val)), min: 1),
                   _buildSwitch(
                     title: 'Pet Friendly',
                     subtitle: 'Allow pets to stay',
@@ -131,13 +136,12 @@ class _FilterFullScreenState extends State<FilterFullScreen> {
             ),
           ),
           
-          // Nút Apply nằm cố định ở đáy
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: bgColor,
               boxShadow: [
-                BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, -5)),
+                BoxShadow(color: isDark ? Colors.black26 : Colors.grey.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, -5)),
               ],
             ),
             child: SafeArea(
@@ -152,7 +156,7 @@ class _FilterFullScreenState extends State<FilterFullScreen> {
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
-                  child: const Text('Show Results', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  child: Text(tr('Show Results'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                 ),
               ),
             ),
@@ -185,10 +189,10 @@ class _FilterFullScreenState extends State<FilterFullScreen> {
         child: DropdownButton<String>(
           value: _criteria.sortOrder,
           isExpanded: true,
-          items: const [
-            DropdownMenuItem(value: 'none', child: Text('Recommended')),
-            DropdownMenuItem(value: 'price_asc', child: Text('Price: Low to High')),
-            DropdownMenuItem(value: 'price_desc', child: Text('Price: High to Low')),
+          items: [
+            DropdownMenuItem(value: 'none', child: Text(tr('Recommended'))),
+            DropdownMenuItem(value: 'price_asc', child: Text(tr('Lowest Price'))),
+            DropdownMenuItem(value: 'price_desc', child: Text(tr('Highest Price'))),
           ],
           onChanged: (value) {
             if (value != null) {
@@ -207,7 +211,7 @@ class _FilterFullScreenState extends State<FilterFullScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Price Range (Per Night)', style: TextStyle(fontWeight: FontWeight.w600)),
+            Text(tr('Price Range (Per Night)'), style: const TextStyle(fontWeight: FontWeight.w600)),
             Text(
               '\$${_criteria.minPrice.round()} - \$${_criteria.maxPrice.round()}',
               style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold),
@@ -230,10 +234,14 @@ class _FilterFullScreenState extends State<FilterFullScreen> {
   }
 
   Widget _buildStarRating() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = Theme.of(context).scaffoldBackgroundColor;
+    final textColor = isDark ? Colors.white : Colors.black;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Minimum Star Rating', style: TextStyle(fontWeight: FontWeight.w600)),
+        Text(tr('Minimum Star Rating'), style: const TextStyle(fontWeight: FontWeight.w600)),
         const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -244,15 +252,15 @@ class _FilterFullScreenState extends State<FilterFullScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: isSelected ? Theme.of(context).colorScheme.primary : Colors.white,
+                  color: isSelected ? Theme.of(context).colorScheme.primary : bgColor,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey.shade300),
+                  border: Border.all(color: isSelected ? Theme.of(context).colorScheme.primary : (isDark ? Colors.grey.shade800 : Colors.grey.shade300)),
                 ),
                 child: Row(
                   children: [
                     Icon(Icons.star, size: 16, color: isSelected ? Colors.white : Colors.amber),
                     const SizedBox(width: 4),
-                    Text('$star', style: TextStyle(color: isSelected ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
+                    Text('$star', style: TextStyle(color: isSelected ? Colors.white : textColor, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
@@ -270,7 +278,7 @@ class _FilterFullScreenState extends State<FilterFullScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Review Score', style: TextStyle(fontWeight: FontWeight.w600)),
+            Text(tr('Review Score'), style: const TextStyle(fontWeight: FontWeight.w600)),
             Text('${_criteria.minReviewScore.toStringAsFixed(1)}+', style: const TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),

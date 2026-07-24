@@ -7,7 +7,7 @@ COPY package*.json ./
 COPY prisma ./prisma/
 
 # Cài đặt toàn bộ dependencies (bao gồm cả thư viện dev để chạy nodemon/ts-node-dev)
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Sinh ra Prisma Client Engine để code không bị báo lỗi Type
 RUN npx prisma generate

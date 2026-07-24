@@ -16,9 +16,11 @@ app.use(cookieParser());
 
 import bookingRouter from "@/modules/booking/BookingRouter.js";
 import paymentRouter from "@/modules/payment/PaymentRouter.js";
+import promotionRouter from "@/modules/promotion/routes/promotion.route.js";
 
 app.use("/api/bookings", bookingRouter);
 app.use("/api/payment", paymentRouter);
+app.use("/api/promotions", promotionRouter);
 
 import swaggerUi from "swagger-ui-express";
 import fs from "fs";

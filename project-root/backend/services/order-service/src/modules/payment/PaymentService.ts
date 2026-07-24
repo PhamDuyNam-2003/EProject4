@@ -26,7 +26,9 @@ export class PaymentService {
     const date = new Date();
     const createDate = moment(date).format("YYYYMMDDHHmmss");
     const orderId = moment(date).format("DDHHmmss");
-    const amount = Number(booking.finalAmount) * 100; // VNPay tính bằng đơn vị 100 VND
+    // Tỷ giá giả định 1 USD = 25,000 VND. VNPay yêu cầu nhân thêm 100.
+    const finalAmountNum = typeof booking.finalAmount === 'number' ? booking.finalAmount : Number(booking.finalAmount.toString());
+    const amount = Math.round(finalAmountNum * 25000 * 100);
 
     let vnp_Params: Record<string, string | number> = {
       vnp_Version: "2.1.0",
@@ -53,8 +55,15 @@ export class PaymentService {
     const paymentUrl = vnpUrl + "?" + qs.stringify(vnp_Params, { encode: false });
 
     // Lưu transaction pending
-    await prisma.paymentTransaction.create({
-      data: {
+    await prisma.paymentTransaction.upsert({
+      where: { bookingId: booking.id },
+      update: {
+        transactionId: orderId,
+        provider: "VNPAY",
+        amount: booking.finalAmount,
+        status: "PENDING"
+      },
+      create: {
         bookingId: booking.id,
         transactionId: orderId, // Lưu mã giao dịch gốc
         provider: "VNPAY",
@@ -137,10 +146,18 @@ export class PaymentService {
       return { success: true, bookingId: transaction.bookingId };
     } else {
       // Cập nhật thất bại
-      await prisma.paymentTransaction.update({
-        where: { id: transaction.id },
-        data: { status: "FAILED", rawData: vnp_Params }
+      await prisma.$transaction(async (tx) => {
+        await tx.paymentTransaction.update({
+          where: { id: transaction.id },
+          data: { status: "FAILED", rawData: vnp_Params }
+        });
+
+        await tx.booking.update({
+          where: { id: transaction.bookingId },
+          data: { status: "CANCELLED" }
+        });
       });
+      
       return { success: false, bookingId: transaction.bookingId };
     }
   }

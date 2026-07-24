@@ -112,6 +112,12 @@ export class AuthService implements IAuthService {
       throw new ConflictError("Tài khoản đã bị khóa.");
     }
 
+    if (!user.passwordHash) {
+      throw new BadRequestError(
+        "Tài khoản chưa được thiết lập mật khẩu. Vui lòng đăng nhập bằng mã OTP và thiết lập mật khẩu mới."
+      );
+    }
+
     const isPasswordValid = await this.tokenService.comparePassword(
       dto.password,
       user.passwordHash,

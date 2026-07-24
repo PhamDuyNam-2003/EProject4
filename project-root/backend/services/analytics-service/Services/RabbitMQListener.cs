@@ -14,11 +14,11 @@ using RabbitMQ.Client.Events;
 
 namespace AnalyticsService.Services
 {
-    public class OrderCreatedMessage
+    public class BookingPaidMessage
     {
-        public string OrderId { get; set; } = string.Empty;
+        public string BookingId { get; set; } = string.Empty;
         public string HotelId { get; set; } = string.Empty;
-        public decimal TotalPrice { get; set; }
+        public decimal FinalAmount { get; set; }
     }
 
     public class RabbitMQListener : BackgroundService
@@ -48,17 +48,16 @@ namespace AnalyticsService.Services
                 _connection = await factory.CreateConnectionAsync();
                 _channel = await _connection.CreateChannelAsync();
 
-                await _channel.QueueDeclareAsync(queue: "order.created.analytics",
+                await _channel.QueueDeclareAsync(queue: "analytics_booking_paid_queue",
                                      durable: true,
                                      exclusive: false,
                                      autoDelete: false,
                                      arguments: null);
 
-                // Assuming exchange "order_events" exists, we bind to it
-                await _channel.ExchangeDeclareAsync("order_events", ExchangeType.Topic, durable: true);
-                await _channel.QueueBindAsync(queue: "order.created.analytics",
-                                  exchange: "order_events",
-                                  routingKey: "order.created");
+                await _channel.ExchangeDeclareAsync("booking.events", ExchangeType.Topic, durable: true);
+                await _channel.QueueBindAsync(queue: "analytics_booking_paid_queue",
+                                  exchange: "booking.events",
+                                  routingKey: "booking.paid");
 
                 var consumer = new AsyncEventingBasicConsumer(_channel);
                 consumer.ReceivedAsync += async (model, ea) =>
@@ -69,21 +68,22 @@ namespace AnalyticsService.Services
 
                     try
                     {
-                        var orderMsg = JsonSerializer.Deserialize<OrderCreatedMessage>(message);
-                        if (orderMsg != null)
+                        var bookingMsg = JsonSerializer.Deserialize<BookingPaidMessage>(message, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                        if (bookingMsg != null && !string.IsNullOrEmpty(bookingMsg.BookingId))
                         {
                             using var scope = _serviceProvider.CreateScope();
                             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
                             var record = new RevenueRecord
                             {
-                                OrderId = orderMsg.OrderId,
-                                HotelId = orderMsg.HotelId,
-                                Amount = orderMsg.TotalPrice
+                                OrderId = bookingMsg.BookingId,
+                                HotelId = bookingMsg.HotelId ?? "UNKNOWN",
+                                Amount = bookingMsg.FinalAmount
                             };
 
                             dbContext.RevenueRecords.Add(record);
                             await dbContext.SaveChangesAsync();
+                            _logger.LogInformation($"Saved revenue record for booking {bookingMsg.BookingId}");
                         }
                     }
                     catch (Exception ex)
@@ -94,7 +94,7 @@ namespace AnalyticsService.Services
                     await _channel.BasicAckAsync(deliveryTag: ea.DeliveryTag, multiple: false);
                 };
 
-                await _channel.BasicConsumeAsync(queue: "order.created.analytics",
+                await _channel.BasicConsumeAsync(queue: "analytics_booking_paid_queue",
                                      autoAck: false,
                                      consumer: consumer);
                                      

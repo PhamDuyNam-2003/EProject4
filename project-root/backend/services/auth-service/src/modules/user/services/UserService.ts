@@ -70,6 +70,12 @@ export class UserService implements IUserService {
     return UserMapper.toResponseDto(user);
   }
 
+  async getUserWithPasswordByEmail(email: string): Promise<any> {
+    logger.debug(`Fetching user details with password for Email: ${email}`);
+    const user = await this.userRepository.findByEmailOrPhone(email);
+    return user;
+  }
+
   async updateProfile(
     userId: string,
     dto: UpdateUserProfileDto,

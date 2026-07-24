@@ -8,6 +8,11 @@ class HotelModel {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final List<String> images;
+  final double? latitude;
+  final double? longitude;
+  final List<String> amenities;
+  final List<String> policies;
+  final double distanceToCenter;
 
   HotelModel({
     required this.id,
@@ -19,7 +24,18 @@ class HotelModel {
     this.createdAt,
     this.updatedAt,
     this.images = const [],
+    this.latitude,
+    this.longitude,
+    this.amenities = const [],
+    this.policies = const [],
+    this.distanceToCenter = 0.0,
   });
+
+  static double _parseDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString()) ?? 0.0;
+  }
 
   factory HotelModel.fromJson(Map<String, dynamic> json) {
     return HotelModel(
@@ -27,11 +43,16 @@ class HotelModel {
       name: json['name'] ?? '',
       address: json['address'] ?? '',
       description: json['description'],
-      rating: json['rating']?.toDouble() ?? 5.0,
-      priceFrom: json['priceFrom']?.toDouble() ?? json['price_from']?.toDouble() ?? json['price']?.toDouble() ?? 0.0,
+      rating: _parseDouble(json['rating']),
+      priceFrom: _parseDouble(json['priceFrom'] ?? json['price_from'] ?? json['price']),
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
       updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
       images: json['images'] != null ? List<String>.from(json['images']) : [],
+      latitude: json['latitude'] != null ? _parseDouble(json['latitude']) : null,
+      longitude: json['longitude'] != null ? _parseDouble(json['longitude']) : null,
+      amenities: json['amenities'] != null ? List<String>.from(json['amenities']) : [],
+      policies: json['policies'] != null ? List<String>.from(json['policies']) : [],
+      distanceToCenter: _parseDouble(json['distanceToCenter'] ?? 2.5),
     );
   }
 
@@ -46,6 +67,11 @@ class HotelModel {
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
       'images': images,
+      'latitude': latitude,
+      'longitude': longitude,
+      'amenities': amenities,
+      'policies': policies,
+      'distanceToCenter': distanceToCenter,
     };
   }
 }

@@ -74,9 +74,9 @@ class HotelBookingApp extends StatelessWidget {
                 return const Scaffold(body: Center(child: CircularProgressIndicator()));
               }
               if (snapshot.data == true) {
-                return const ResponsiveWrapper(child: MainNavigationScreen());
+                return ResponsiveWrapper(child: MainNavigationScreen());
               }
-              return const ResponsiveWrapper(child: LoginScreen());
+              return ResponsiveWrapper(child: LoginScreen());
             },
           ),
         );

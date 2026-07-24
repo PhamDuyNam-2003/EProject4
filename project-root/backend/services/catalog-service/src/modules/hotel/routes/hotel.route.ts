@@ -6,5 +6,8 @@ const router = Router();
 router.post('/', hotelController.createHotel);
 router.get('/', hotelController.getAllHotels);
 router.get('/:id', hotelController.getHotelById);
+router.get('/:id/room-types', hotelController.getRoomTypes);
+router.get('/:id/reviews', hotelController.getReviews);
+router.post('/lock-room', hotelController.lockRoom);
 
 export default router;

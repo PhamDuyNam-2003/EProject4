@@ -4,7 +4,10 @@ import '../../../data/models/hotel_model.dart';
 import 'booking_success_screen.dart';
 import '../../../core/app_settings.dart';
 import '../../../core/booking_service.dart';
+import '../../../data/models/room_type_model.dart';
+import '../../../data/repositories/hotel_repository.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../features/booking/widgets/booking_calendar_dialog.dart';
 
 class BookingScreen extends StatefulWidget {
   final HotelModel hotel;
@@ -23,12 +26,73 @@ class _BookingScreenState extends State<BookingScreen> {
   int rooms = 1;
   double taxes = 50.0;
   bool _isLoading = false;
+  List<RoomTypeModel> roomTypes = [];
+  RoomTypeModel? selectedRoomType;
+  Map<String, dynamic> _availabilityCache = {};
 
   @override
   void initState() {
     super.initState();
     checkInDate = DateTime.now().add(const Duration(days: 1));
     checkOutDate = DateTime.now().add(const Duration(days: 3));
+    _fetchRoomTypes().then((_) {
+      _fetchAvailabilityForPicker();
+    });
+  }
+
+  Future<void> _fetchRoomTypes() async {
+    final repo = ApiHotelRepository();
+    final list = await repo.getRoomTypesByHotelId(widget.hotel.id);
+    if (mounted) {
+      setState(() {
+        roomTypes = list;
+        if (roomTypes.isNotEmpty) {
+          selectedRoomType = roomTypes.first;
+        }
+      });
+    }
+  }
+
+  Future<void> _fetchAvailabilityForPicker() async {
+    try {
+      final data1 = await BookingService.instance.getHotelAvailability(widget.hotel.id, checkInDate.month, checkInDate.year);
+      Map<String, dynamic> combined = {...data1};
+      
+      if (checkInDate.month != checkOutDate.month || checkInDate.year != checkOutDate.year) {
+        final data2 = await BookingService.instance.getHotelAvailability(widget.hotel.id, checkOutDate.month, checkOutDate.year);
+        combined.addAll(data2);
+      }
+      
+      if (mounted) {
+        setState(() {
+          _availabilityCache = combined;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching availability: $e');
+    }
+  }
+
+  int _getRemainingRooms(String roomTypeId) {
+    if (_availabilityCache.isEmpty) return -1; // Loading state
+    int minAvailable = 999;
+    
+    DateTime current = checkInDate;
+    while (current.isBefore(checkOutDate)) {
+      final dateStr = DateFormat('yyyy-MM-dd').format(current);
+      if (_availabilityCache.containsKey(dateStr)) {
+        final roomData = _availabilityCache[dateStr][roomTypeId];
+        if (roomData != null) {
+          final int inventory = roomData['inventory'] ?? 5;
+          final int req = roomData['totalRequested'] ?? 0;
+          final int left = inventory - req;
+          if (left < minAvailable) minAvailable = left;
+        }
+      }
+      current = current.add(const Duration(days: 1));
+    }
+    
+    return minAvailable == 999 ? 0 : minAvailable;
   }
 
   int get nights {
@@ -36,85 +100,102 @@ class _BookingScreenState extends State<BookingScreen> {
     return diff > 0 ? diff : 1;
   }
 
-  double get total => (widget.hotel.price * nights * rooms) + taxes;
+  double get total => ((selectedRoomType?.basePrice ?? widget.hotel.priceFrom) * nights * rooms) + taxes;
 
-  Future<void> _selectDate(BuildContext context, bool isCheckIn) async {
-    final DateTime? picked = await showDatePicker(
+  Future<void> _selectDateRange(BuildContext context) async {
+    final DateTimeRange? picked = await showDialog<DateTimeRange>(
       context: context,
-      initialDate: isCheckIn ? checkInDate : checkOutDate,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Theme.of(context).colorScheme.primary,
-              onPrimary: Colors.white,
-              onSurface: Colors.black,
-            ),
-          ),
-          child: child!,
-        );
-      },
+      builder: (context) => BookingCalendarDialog(
+        hotelId: widget.hotel.id,
+        roomTypeId: selectedRoomType?.id ?? '',
+        initialStartDate: checkInDate,
+        initialEndDate: checkOutDate,
+      ),
     );
 
     if (picked != null) {
       setState(() {
-        if (isCheckIn) {
-          checkInDate = picked;
-          if (checkOutDate.isBefore(checkInDate) || checkOutDate.isAtSameMomentAs(checkInDate)) {
-            checkOutDate = checkInDate.add(const Duration(days: 1));
-          }
-        } else {
-          if (picked.isAfter(checkInDate)) {
-            checkOutDate = picked;
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Check-out date must be after check-in date')),
-            );
-          }
-        }
+        checkInDate = picked.start;
+        checkOutDate = picked.end;
       });
+      _fetchAvailabilityForPicker();
     }
   }
 
   void _showGuestRoomPicker(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return Container(
-              padding: const EdgeInsets.all(24),
+            return SingleChildScrollView(
+              padding: EdgeInsets.only(
+                left: 24,
+                right: 24,
+                top: 24,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Select Guests & Rooms', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  const Text('Chọn Khách & Phòng', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 24),
-                  _buildCounterRow('Rooms', rooms, (val) {
+                  _buildCounterRow('Số phòng', rooms, (val) {
                     if (val > 0) {
                       setModalState(() => rooms = val);
                       setState(() => rooms = val);
                     }
                   }),
                   const SizedBox(height: 16),
-                  _buildCounterRow('Adults', adults, (val) {
+                  _buildCounterRow('Người lớn', adults, (val) {
                     if (val > 0) {
                       setModalState(() => adults = val);
                       setState(() => adults = val);
                     }
                   }),
                   const SizedBox(height: 16),
-                  _buildCounterRow('Children', children, (val) {
+                  _buildCounterRow('Trẻ em', children, (val) {
                     if (val >= 0) {
                       setModalState(() => children = val);
                       setState(() => children = val);
                     }
                   }),
+                  const SizedBox(height: 24),
+                  if (roomTypes.isNotEmpty) ...[
+                    const Text('Chọn Loại Phòng', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 16),
+                    ...roomTypes.map((rt) {
+                      final remaining = _getRemainingRooms(rt.id);
+                      final remainingText = remaining == -1 
+                          ? 'Đang tải...' 
+                          : (remaining > 0 ? 'Còn $remaining phòng' : 'Hết phòng');
+                      final color = remaining > 0 ? Colors.green : Colors.red;
+
+                      return RadioListTile<RoomTypeModel>(
+                        value: rt,
+                        groupValue: selectedRoomType,
+                        onChanged: remaining > 0 ? (RoomTypeModel? value) {
+                          setModalState(() => selectedRoomType = value);
+                          setState(() => selectedRoomType = value);
+                        } : null,
+                        title: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(rt.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            Text(remainingText, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                        subtitle: Text('\$${rt.basePrice}/đêm - Tối đa ${rt.maxAdults} người lớn'),
+                        contentPadding: EdgeInsets.zero,
+                        activeColor: Theme.of(context).colorScheme.primary,
+                      );
+                    }).toList(),
+                  ],
                   const SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
@@ -125,7 +206,7 @@ class _BookingScreenState extends State<BookingScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
-                      child: const Text('Done', style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
+                      child: const Text('Hoàn tất', style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -270,24 +351,17 @@ class _BookingScreenState extends State<BookingScreen> {
               child: Column(
                 children: [
                   _buildInteractiveRow(
-                    icon: Icons.calendar_today,
-                    title: 'Check-in',
-                    value: formatter.format(checkInDate),
-                    onTap: () => _selectDate(context, true),
-                  ),
-                  Divider(height: 1, color: Theme.of(context).dividerColor.withOpacity(0.1), indent: 56),
-                  _buildInteractiveRow(
-                    icon: Icons.calendar_today,
-                    title: 'Check-out',
-                    value: formatter.format(checkOutDate),
-                    onTap: () => _selectDate(context, false),
-                  ),
-                  Divider(height: 1, color: Theme.of(context).dividerColor.withOpacity(0.1), indent: 56),
-                  _buildInteractiveRow(
                     icon: Icons.person_outline,
-                    title: tr('Guests & Rooms'),
-                    value: '$rooms Room, ${adults + children} Guest',
+                    title: 'Khách & Phòng',
+                    value: '$rooms Phòng (${selectedRoomType?.name ?? "Tiêu chuẩn"}), ${adults + children} Khách',
                     onTap: () => _showGuestRoomPicker(context),
+                  ),
+                  Divider(height: 1, color: Theme.of(context).dividerColor.withOpacity(0.1), indent: 56),
+                  _buildInteractiveRow(
+                    icon: Icons.calendar_today,
+                    title: 'Ngày đặt',
+                    value: '${formatter.format(checkInDate)} - ${formatter.format(checkOutDate)}',
+                    onTap: () => _selectDateRange(context),
                   ),
                 ],
               ),
@@ -296,7 +370,7 @@ class _BookingScreenState extends State<BookingScreen> {
 
             // Price Summary
             Text(
-              tr('Price Summary'),
+              tr('Tóm tắt chi phí'),
               style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
@@ -312,15 +386,15 @@ class _BookingScreenState extends State<BookingScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('$rooms ${tr('Rooms')} x $nights nights', style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
-                      Text('\$${(widget.hotel.price * nights * rooms).toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                      Text('$rooms ${tr('Số phòng')} x $nights nights', style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
+                      Text('\$${((selectedRoomType?.basePrice ?? widget.hotel.priceFrom) * nights * rooms).toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
                     ],
                   ),
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Taxes & Fees', style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
+                      Text('Thuế & Phí', style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
                       Text('\$${taxes.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
                     ],
                   ),
@@ -341,7 +415,7 @@ class _BookingScreenState extends State<BookingScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(tr('Total Amount'), style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text('Tổng cộng', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 18, fontWeight: FontWeight.bold)),
                       Text(
                         '\$${total.toStringAsFixed(2)}',
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -415,6 +489,7 @@ class _BookingScreenState extends State<BookingScreen> {
                     try {
                       final bookingId = await BookingService.instance.createBooking(
                         hotelId: widget.hotel.id,
+                        roomTypeId: selectedRoomType?.id,
                         checkInDate: checkInDate,
                         checkOutDate: checkOutDate,
                         rooms: rooms,

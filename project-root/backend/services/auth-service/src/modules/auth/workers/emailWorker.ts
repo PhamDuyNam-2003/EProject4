@@ -39,7 +39,15 @@ export const startEmailWorker = async (): Promise<void> => {
         `Đang gửi OTP tới ${payload.to} (Retry ${retries}/${MAX_RETRY})`,
       );
 
-      await emailService.sendOtpEmail(payload.to, payload.otpCode);
+      logger.info(`=================================================`);
+      logger.info(`🔑 MÃ OTP CỦA ${payload.to} LÀ: ${payload.otpCode}`);
+      logger.info(`=================================================`);
+
+      try {
+        await emailService.sendOtpEmail(payload.to, payload.otpCode);
+      } catch (e) {
+        logger.warn(`Không thể gửi email thực tế do chưa cấu hình SMTP. Vui lòng lấy mã OTP ở trên để test.`);
+      }
 
       rabbitMQ.ack(msg);
 

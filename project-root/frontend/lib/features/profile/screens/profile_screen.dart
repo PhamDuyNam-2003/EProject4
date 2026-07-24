@@ -12,6 +12,8 @@ import 'analytics_screen.dart';
 import '../../../core/auth_service.dart';
 import '../../auth/screens/login_screen.dart';
 
+import '../../../core/notification_service.dart';
+
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -20,6 +22,21 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  int _unreadCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUnreadCount();
+  }
+
+  Future<void> _loadUnreadCount() async {
+    final count = await NotificationService.instance.getUnreadCount();
+    if (mounted) {
+      setState(() => _unreadCount = count);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -102,7 +119,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _MenuItem(
                   icon: Icons.notifications_none, 
                   title: tr('Notifications'),
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationsScreen())),
+                  trailing: _unreadCount > 0 
+                      ? Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                          child: Text('$_unreadCount', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                        )
+                      : null,
+                  onTap: () async {
+                    await Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationsScreen()));
+                    _loadUnreadCount();
+                  },
                 ),
                 _MenuItem(
                   icon: Icons.bar_chart, 
@@ -325,7 +352,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Icon(item.icon, color: Theme.of(context).colorScheme.primary),
                     ),
                     title: Text(item.title, style: const TextStyle(fontWeight: FontWeight.w600)),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                    trailing: item.trailing ?? const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
                     onTap: item.onTap,
                   ),
                   if (index < items.length - 1)
@@ -347,13 +374,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
         height: 56,
         child: OutlinedButton(
           onPressed: () async {
-            await AuthService.instance.logout();
-            if (mounted) {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-                (route) => false,
-              );
+            try {
+              await AuthService.instance.logout();
+              if (mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  (route) => false,
+                );
+              }
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Logout failed: $e'), backgroundColor: Colors.red),
+                );
+                // Force logout anyway for demo
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  (route) => false,
+                );
+              }
             }
           },
           style: OutlinedButton.styleFrom(
@@ -381,6 +422,7 @@ class _MenuItem {
   final IconData icon;
   final String title;
   final VoidCallback onTap;
+  final Widget? trailing;
 
-  _MenuItem({required this.icon, required this.title, required this.onTap});
+  _MenuItem({required this.icon, required this.title, required this.onTap, this.trailing});
 }

@@ -1,16 +1,20 @@
 import '../models/hotel_model.dart';
 import '../models/filter_criteria.dart';
+import '../models/room_type_model.dart';
+import '../models/review_model.dart';
 import '../mock/mock_database.dart';
 import 'package:dio/dio.dart';
 import '../../core/app_settings.dart';
-import '../../core/app_constants.dart';
+import '../../config/constants.dart';
 
 abstract class HotelRepository {
-  Future<List<HotelModel>> getPopularHotels(FilterCriteria criteria);
+  Future<List<HotelModel>> getPopularHotels(FilterCriteria criteria, {int page = 1, int limit = 10});
   Future<HotelModel?> getHotelById(String id);
+  Future<List<RoomTypeModel>> getRoomTypesByHotelId(String id);
+  Future<List<ReviewModel>> getReviewsByHotelId(String id);
 }
 
-class MockHotelRepository implements HotelRepository {
+/* class MockHotelRepository implements HotelRepository {
   @override
   Future<HotelModel?> getHotelById(String id) async {
     await Future.delayed(const Duration(milliseconds: 300));
@@ -97,6 +101,7 @@ class MockHotelRepository implements HotelRepository {
   }
 }
 
+*/
 class ApiHotelRepository implements HotelRepository {
   final Dio _dio;
 
@@ -121,15 +126,66 @@ class ApiHotelRepository implements HotelRepository {
   }
 
   @override
-  Future<List<HotelModel>> getPopularHotels(FilterCriteria criteria) async {
+  Future<List<RoomTypeModel>> getRoomTypesByHotelId(String id) async {
+    try {
+      final response = await _dio.get('/hotels/$id/room-types');
+      if (response.statusCode == 200 && response.data['success']) {
+        final List<dynamic> data = response.data['data'];
+        return data.map((json) => RoomTypeModel.fromJson(json)).toList();
+      }
+      return [];
+    } catch (e) {
+      print('Error fetching room types: $e');
+      return [];
+    }
+  }
+
+  @override
+  Future<List<ReviewModel>> getReviewsByHotelId(String id) async {
+    try {
+      final response = await _dio.get('/hotels/$id/reviews');
+      if (response.statusCode == 200 && response.data['success']) {
+        final List<dynamic> data = response.data['data'];
+        return data.map((json) => ReviewModel.fromJson(json)).toList();
+      }
+      return [];
+    } catch (e) {
+      print('Error fetching reviews: $e');
+      return [];
+    }
+  }
+
+  @override
+  Future<List<HotelModel>> getPopularHotels(FilterCriteria criteria, {int page = 1, int limit = 10}) async {
     try {
       final response = await _dio.get('/hotels', queryParameters: {
         if (criteria.query.isNotEmpty) 'search': criteria.query,
+        if (criteria.category != 'All') 'category': criteria.category,
+        'minPrice': criteria.minPrice,
+        'maxPrice': criteria.maxPrice,
+        'rating': criteria.minRating,
+        if (criteria.petFriendly) 'petFriendly': 'true',
+        if (criteria.amenities.isNotEmpty) 'amenities': criteria.amenities.join(','),
+        'page': page,
+        'limit': limit,
       });
       
       if (response.statusCode == 200 && response.data['success']) {
         final List<dynamic> data = response.data['data'];
-        return data.map((json) => HotelModel.fromJson(json)).toList();
+        List<HotelModel> results = data.map((json) => HotelModel.fromJson(json)).toList();
+
+        // No need for local filtering since Backend handles it now.
+
+        // Sorting
+        if (criteria.sortOrder == 'price_asc') {
+          results.sort((a, b) => a.priceFrom.compareTo(b.priceFrom));
+        } else if (criteria.sortOrder == 'price_desc') {
+          results.sort((a, b) => b.priceFrom.compareTo(a.priceFrom));
+        } else if (criteria.sortOrder == 'rating_desc') {
+          results.sort((a, b) => b.rating.compareTo(a.rating));
+        }
+
+        return results;
       }
       return [];
     } catch (e) {

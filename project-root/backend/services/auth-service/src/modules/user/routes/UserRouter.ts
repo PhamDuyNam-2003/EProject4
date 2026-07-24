@@ -12,6 +12,7 @@ import {
   authMiddleware,
   requireOwnershipOrAdmin,
 } from "@/middlewares";
+import { upload } from "@/config/cloudinary";
 
 
 import {
@@ -114,6 +115,39 @@ router.put(
   validate(UserIdParamSchema),
   validate(UpdateUserProfileSchema),
   asyncHandler(userController.updateProfile),
+);
+
+// =====================================================
+// UPLOAD AVATAR
+// =====================================================
+router.post(
+  "/:id/avatar",
+  /*
+    #swagger.path = '/api/users/{id}/avatar'
+    #swagger.tags = ['Users']
+    #swagger.summary = 'Tải lên ảnh đại diện'
+    #swagger.consumes = ['multipart/form-data']
+    #swagger.parameters['avatar'] = {
+        in: 'formData',
+        type: 'file',
+        required: 'true',
+        description: 'File ảnh đại diện'
+    }
+  */
+  authMiddleware,
+  requireOwnershipOrAdmin,
+  validate(UserIdParamSchema),
+  upload.single("avatar"),
+  asyncHandler(async (req, res) => {
+    if (!req.file) {
+      res.status(400).json({ success: false, message: "Không tìm thấy file" });
+      return;
+    }
+    const user = await userService.updateProfile(req.params.id as string, {
+      avatarUrl: req.file.path,
+    });
+    res.json({ success: true, message: "Upload thành công", data: user });
+  })
 );
 
 // =====================================================

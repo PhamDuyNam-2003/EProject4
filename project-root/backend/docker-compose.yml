@@ -1,6 +1,10 @@
 version: '3.8'
 
+# =======================================================
+# 1. DATABASES & MESSAGE BROKERS
+# =======================================================
 services:
+  # --- PostgreSQL Databases ---
   identity_db:
     image: postgres:15-alpine
     container_name: identity_postgres_dev
@@ -19,7 +23,7 @@ services:
     container_name: inventory_postgres_dev
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123
+      POSTGRES_PASSWORD: "123"
       POSTGRES_DB: inventory_db
     ports:
       - "5433:5432"
@@ -66,6 +70,19 @@ services:
       - notification_pgdata:/var/lib/postgresql/data
     restart: unless-stopped
 
+  # --- NoSQL Databases ---
+  mongodb:
+    image: mongo:6.0
+    container_name: hotel_mongodb_dev
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: adminpassword
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+
   global_redis:
     image: redis:7-alpine
     container_name: global_redis_dev
@@ -73,7 +90,7 @@ services:
       - "6379:6379"
     restart: unless-stopped
 
-  # RabbitMQ
+  # --- Message Brokers ---
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: global_rabbitmq_dev
@@ -85,6 +102,9 @@ services:
       RABBITMQ_DEFAULT_PASS: guest
     restart: unless-stopped
 
+# =======================================================
+# 2. MICROSERVICES
+# =======================================================
   auth_api:
     build:
       context: ./services/auth-service
@@ -98,6 +118,12 @@ services:
       - DATABASE_URL=postgresql://postgres:123456@identity_db:5432/identity_db?schema=public
       - REDIS_HOST=global_redis
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - PORT=3000
+      - SMTP_HOST=smtp.gmail.com
+      - SMTP_PORT=587
+      - SMTP_USER=trollmlbbtop@gmail.com
+      - SMTP_PASSWORD=tyvancwfjjzzpexv
+      - CLOUDINARY_URL=cloudinary://dummy:O9YZK1PDjx9cnAfDyMVs1xxSbzI@dummy
     volumes:
       - ./services/auth-service:/app
       - /app/node_modules
@@ -119,6 +145,13 @@ services:
       - DATABASE_URL=postgresql://postgres:123456@order_db:5432/order_db?schema=public
       - REDIS_HOST=global_redis
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - PORT=3002
+      - CATALOG_SERVICE_URL=http://catalog_api:3005
+      - VNPAY_TMN_CODE=CGXZLS0Z
+      - VNPAY_HASH_SECRET=XNBCJFAKAZQSGTARRLGCHVZWCIOIGSHN
+      - VNPAY_URL=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+      - VNPAY_RETURN_URL=http://localhost:3002/api/payment/vnpay/return
+      - CATALOG_SERVICE_URL=http://catalog_api:3005
     volumes:
       - ./services/order-service:/app
       - /app/node_modules
@@ -156,6 +189,7 @@ services:
       - DATABASE_URL=postgresql://postgres:123456@notification_db:5432/notification_db?schema=public
       - REDIS_HOST=global_redis
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - PORT=3004
     volumes:
       - ./services/notification-service:/app
       - /app/node_modules
@@ -177,6 +211,7 @@ services:
       - DATABASE_URL=postgresql://postgres:123@inventory_db:5432/inventory_db?schema=public
       - REDIS_HOST=global_redis
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - PORT=3005
     volumes:
       - ./services/catalog-service:/app
       - /app/node_modules
@@ -185,6 +220,26 @@ services:
       - global_redis
       - rabbitmq
 
+  operation_api:
+    build:
+      context: ./services/operation-service
+      dockerfile: Dockerfile
+    container_name: operation_api_dev
+    restart: unless-stopped
+    ports:
+      - "3006:3006"
+    environment:
+      - MONGO_URI=mongodb://admin:adminpassword@mongodb:27017/operation_db?authSource=admin
+      - PORT=3006
+    volumes:
+      - ./services/operation-service:/app
+      - /app/node_modules
+    depends_on:
+      - mongodb
+
+# =======================================================
+# 3. API GATEWAY
+# =======================================================
   api_gateway:
     build:
       context: ./api-gateway
@@ -200,6 +255,7 @@ services:
       - ANALYTICS_SERVICE_URL=http://analytics_api:8080
       - NOTIFICATION_SERVICE_URL=http://notification_api:3004
       - CATALOG_SERVICE_URL=http://catalog_api:3005
+      - OPERATION_SERVICE_URL=http://operation_api:3006
     volumes:
       - ./api-gateway:/app
       - /app/node_modules
@@ -209,7 +265,11 @@ services:
       - analytics_api
       - notification_api
       - catalog_api
+      - operation_api
 
+# =======================================================
+# 4. MONITORING & UI TOOLS
+# =======================================================
   pgadmin:
     image: dpage/pgadmin4
     container_name: global_pgadmin_dev
@@ -224,18 +284,6 @@ services:
       - order_db
       - analytics_db
       - notification_db
-    restart: unless-stopped
-
-  mongodb:
-    image: mongo:6.0
-    container_name: hotel_mongodb_dev
-    ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: adminpassword
-    volumes:
-      - mongodb_data:/data/db
     restart: unless-stopped
 
   mongoexpress:
@@ -253,22 +301,9 @@ services:
       - mongodb
     restart: unless-stopped
 
-  operation_api:
-    build:
-      context: ./services/operation-service
-      dockerfile: Dockerfile
-    container_name: operation_api_dev
-    restart: unless-stopped
-    ports:
-      - "3006:3006"
-    environment:
-      - MONGO_URI=mongodb://admin:adminpassword@mongodb:27017/operation_db?authSource=admin
-    volumes:
-      - ./services/operation-service:/app
-      - /app/node_modules
-    depends_on:
-      - mongodb
-
+# =======================================================
+# 5. VOLUMES
+# =======================================================
 volumes:
   identity_pgdata:
   inventory_pgdata:

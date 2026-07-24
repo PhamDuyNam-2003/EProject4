@@ -6,6 +6,8 @@ import '../widgets/hotel_card.dart';
 import 'filter_full_screen.dart';
 import 'map_screen.dart';
 import '../../../core/app_settings.dart';
+import 'package:geolocator/geolocator.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,20 +18,92 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final HotelRepository _hotelRepo = ApiHotelRepository();
+  final ScrollController _scrollController = ScrollController();
   
   FilterCriteria _currentCriteria = const FilterCriteria();
-  late Future<List<HotelModel>> _popularHotelsFuture;
+  
+  List<HotelModel> _hotels = [];
+  int _currentPage = 1;
+  bool _isLoading = false;
+  bool _hasMore = true;
+  Position? _userPosition;
 
   @override
   void initState() {
     super.initState();
-    _fetchHotels();
+    _fetchHotels(isRefresh: true);
+    _determinePosition();
+    
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+        if (!_isLoading && _hasMore) {
+          _fetchHotels(isRefresh: false);
+        }
+      }
+    });
   }
 
-  void _fetchHotels() {
+  Future<void> _determinePosition() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return;
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) return;
+      }
+      
+      if (permission == LocationPermission.deniedForever) return;
+
+      final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      if (mounted) {
+        setState(() {
+          _userPosition = position;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error getting location: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchHotels({bool isRefresh = false}) async {
+    if (isRefresh) {
+      setState(() {
+        _currentPage = 1;
+        _hasMore = true;
+        _hotels = [];
+      });
+    }
+
+    if (!_hasMore || _isLoading) return;
+
     setState(() {
-      _popularHotelsFuture = _hotelRepo.getPopularHotels(_currentCriteria);
+      _isLoading = true;
     });
+
+    try {
+      final newHotels = await _hotelRepo.getPopularHotels(_currentCriteria, page: _currentPage, limit: 10);
+      
+      setState(() {
+        _currentPage++;
+        _isLoading = false;
+        if (newHotels.isEmpty || newHotels.length < 10) {
+          _hasMore = false;
+        }
+        _hotels.addAll(newHotels);
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   void _openFilterSheet() async {
@@ -45,7 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _currentCriteria = result;
       });
-      _fetchHotels();
+      _fetchHotels(isRefresh: true);
     }
   }
 
@@ -54,22 +128,20 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final hotels = await _popularHotelsFuture;
-          if (mounted) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => MapScreen(hotels: hotels)),
-            );
-          }
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => MapScreen(hotels: _hotels, userPosition: _userPosition)),
+          );
         },
         backgroundColor: Theme.of(context).colorScheme.primary,
         icon: const Icon(Icons.map_outlined, color: Colors.white),
-        label: const Text('Map View', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+        label: Text(tr('Map View'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
         elevation: 8,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
+          controller: _scrollController,
           physics: const BouncingScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,7 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 32),
               _buildCategories(context),
               const SizedBox(height: 40),
-              _buildSectionTitle(context, 'Curated for you', 'See all'),
+              _buildSectionTitle(context, 'Curated for you'),
               const SizedBox(height: 20),
               _buildPopularHotels(context),
               const SizedBox(height: 80),
@@ -119,25 +191,30 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-          Container(
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Theme.of(context).colorScheme.secondary.withOpacity(0.5), width: 2),
-              image: const DecorationImage(
-                image: NetworkImage(
-                    'https://ui-avatars.com/api/?name=Nguyen+Khach&background=0F172A&color=D4AF37&bold=true'),
-                fit: BoxFit.cover,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
+          Row(
+            children: [
+
+              Container(
+                width: 54,
+                height: 54,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Theme.of(context).colorScheme.secondary.withOpacity(0.5), width: 2),
+                  image: const DecorationImage(
+                    image: NetworkImage(
+                        'https://ui-avatars.com/api/?name=Nguyen+Khach&background=0F172A&color=D4AF37&bold=true'),
+                    fit: BoxFit.cover,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
@@ -169,7 +246,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: TextField(
                 onChanged: (value) {
                   _currentCriteria = _currentCriteria.copyWith(query: value);
-                  _fetchHotels();
+                  _fetchHotels(isRefresh: true);
                 },
                 style: const TextStyle(fontSize: 16),
                 decoration: InputDecoration(
@@ -197,6 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildCategories(BuildContext context) {
     final categories = [
+      {'icon': Icons.grid_view_outlined, 'label': 'All'},
       {'icon': Icons.hotel_outlined, 'label': 'Hotel'},
       {'icon': Icons.beach_access_outlined, 'label': 'Resort'},
       {'icon': Icons.home_work_outlined, 'label': 'Villa'},
@@ -220,7 +298,7 @@ class _HomeScreenState extends State<HomeScreen> {
               setState(() {
                 _currentCriteria = _currentCriteria.copyWith(category: cat['label'] as String);
               });
-              _fetchHotels();
+              _fetchHotels(isRefresh: true);
             },
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -268,7 +346,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title, String action) {
+  Widget _buildSectionTitle(BuildContext context, String title, [String? action]) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Row(
@@ -282,60 +360,65 @@ class _HomeScreenState extends State<HomeScreen> {
               letterSpacing: -0.3,
             )
           ),
-          Text(
-            tr(action), 
-            style: TextStyle(
-              fontSize: 14, 
-              color: Theme.of(context).colorScheme.secondary,
-              fontWeight: FontWeight.bold,
-            )
-          ),
+          if (action != null)
+            Text(
+              tr(action), 
+              style: TextStyle(
+                fontSize: 14, 
+                color: Theme.of(context).colorScheme.secondary,
+                fontWeight: FontWeight.bold,
+              )
+            ),
         ],
       ),
     );
   }
 
   Widget _buildPopularHotels(BuildContext context) {
-    return FutureBuilder<List<HotelModel>>(
-      future: _popularHotelsFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SizedBox(
-            height: 320,
-            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-          );
-        } else if (snapshot.hasError) {
-          return const SizedBox(
-            height: 320,
-            child: Center(child: Text('Đã có lỗi xảy ra!')),
-          );
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const SizedBox(
-            height: 320,
-            child: Center(child: Text('Không tìm thấy kết quả nào phù hợp')),
-          );
-        }
+    if (_hotels.isEmpty && _isLoading) {
+      return const SizedBox(
+        height: 320,
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      );
+    }
 
-        final hotels = snapshot.data!;
-        
-        return SizedBox(
-          height: 340,
-          child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            itemCount: hotels.length,
-            separatorBuilder: (context, index) => const SizedBox(width: 20),
+    if (_hotels.isEmpty && !_isLoading) {
+      return SizedBox(
+        height: 320,
+        child: Center(child: Text(tr('Không tìm thấy kết quả nào phù hợp'))),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: Column(
+        children: [
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _hotels.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.75, // Adjust this to match your card's aspect ratio
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+            ),
             itemBuilder: (context, index) {
-              final hotel = hotels[index];
+              final hotel = _hotels[index];
               return HotelCard(
                 hotel: hotel, 
-                imageUrl: 'assets/images/hotel_exterior.png', // Fallback image
+                imageUrl: 'assets/images/hotel_exterior.png', 
+                userPosition: _userPosition,
               );
             },
           ),
-        );
-      },
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24.0),
+              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            ),
+        ],
+      ),
     );
   }
 }

@@ -6,6 +6,8 @@ import '../../../data/models/hotel_model.dart';
 import '../../booking/screens/booking_screen.dart';
 import '../../../core/responsive_wrapper.dart';
 import '../../../core/app_settings.dart';
+import '../../../data/models/review_model.dart';
+import '../../../data/repositories/hotel_repository.dart';
 
 class HotelDetailScreen extends StatefulWidget {
   final HotelModel hotel;
@@ -23,6 +25,15 @@ class HotelDetailScreen extends StatefulWidget {
 
 class _HotelDetailScreenState extends State<HotelDetailScreen> {
   int _currentImageIndex = 0;
+  final ScrollController _scrollController = ScrollController();
+  bool _isLoadingReviews = false;
+  List<ReviewModel> reviews = [];
+  
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +46,7 @@ class _HotelDetailScreenState extends State<HotelDetailScreen> {
         body: Stack(
           children: [
             CustomScrollView(
+              controller: _scrollController,
               physics: const BouncingScrollPhysics(),
               slivers: [
                 SliverAppBar(
@@ -249,6 +261,76 @@ class _HotelDetailScreenState extends State<HotelDetailScreen> {
                           ],
                         ),
                         
+                        // Reviews Section
+                        const SizedBox(height: 32),
+                        const Divider(height: 1),
+                        const SizedBox(height: 32),
+                        Text(
+                          tr('Guest Reviews'),
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _isLoadingReviews
+                            ? const Center(child: CircularProgressIndicator())
+                            : reviews.isEmpty
+                                ? Text(
+                                    tr('No reviews yet. Be the first to review!'),
+                                    style: TextStyle(color: Colors.grey.shade600),
+                                  )
+                                : ListView.builder(
+                                    shrinkWrap: true,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    padding: EdgeInsets.zero,
+                                    itemCount: reviews.length,
+                                    itemBuilder: (context, index) {
+                                      final review = reviews[index];
+                                      return Container(
+                                        margin: const EdgeInsets.only(bottom: 16),
+                                        padding: const EdgeInsets.all(16),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(16),
+                                          border: Border.all(color: Colors.grey.shade200),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                CircleAvatar(
+                                                  backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                                  child: Icon(Icons.person, color: Theme.of(context).colorScheme.primary),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Text('User ${review.userId.substring(0, 5)}...', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                                      Text('${review.createdAt.day}/${review.createdAt.month}/${review.createdAt.year}', style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                                                    ],
+                                                  ),
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    Icon(Icons.star, color: Theme.of(context).colorScheme.secondary, size: 16),
+                                                    const SizedBox(width: 4),
+                                                    Text(review.rating.toString(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 12),
+                                            Text(review.comment),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  ),
+                        
                         // Extra space for bottom bar
                         const SizedBox(height: 120),
                       ],
@@ -352,11 +434,19 @@ class _HotelDetailScreenState extends State<HotelDetailScreen> {
         imageUrl: url,
         fit: BoxFit.cover,
         width: double.infinity,
-        placeholder: (context, url) => Container(
+        placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+        errorWidget: (context, url, error) => Container(
           color: Colors.grey.shade200,
-          child: const Center(child: CircularProgressIndicator()),
+          width: double.infinity,
+          child: const Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.broken_image, size: 48, color: Colors.grey),
+              SizedBox(height: 8),
+              Text('Image not available', style: TextStyle(color: Colors.grey)),
+            ],
+          ),
         ),
-        errorWidget: (context, url, error) => Image.asset(widget.imageUrl, fit: BoxFit.cover, width: double.infinity),
       );
     }
     return Image.asset(url, fit: BoxFit.cover, width: double.infinity);

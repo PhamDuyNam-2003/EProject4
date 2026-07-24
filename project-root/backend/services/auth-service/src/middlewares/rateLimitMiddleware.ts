@@ -15,7 +15,7 @@ export const globalLimiter = rateLimit({
 // Giới hạn khắt khe dành riêng cho các API nhạy cảm (Auth, OTP)
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 phút
-  max: 5, // Chỉ cho phép tối đa 5 requests gửi/xác thực OTP mỗi 15 phút
+  max: 50, // Nới lỏng trong lúc dev
   message: {
     success: false,
     message: "Bạn đã thao tác đăng nhập/gửi OTP quá nhiều lần. Vui lòng chờ 15 phút.",

@@ -24,10 +24,100 @@ model Hotel {
   maxAdults           Int      @default(2)
   maxKids             Int      @default(0)
   bedrooms            Int      @default(1)
+  availableRooms      Int      @default(5)
   amenities           String[]
   roomFeatures        String[]
   policies            String[]
   images              String[]
+  latitude            Float?
+  longitude           Float?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
+
+  roomTypes           RoomType[]
+  reviews             Review[]
+  favoritedBy         FavoriteHotel[]
+}
+
+model RoomType {
+  id              String   @id @default(uuid())
+  hotelId         String
+  name            String
+  description     String?
+  basePrice       Float
+  maxAdults       Int      @default(2)
+  maxKids         Int      @default(0)
+  bedrooms        Int      @default(1)
+  beds            String[]
+  amenities       String[]
+  images          String[]
+  totalInventory  Int      @default(5)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  hotel           Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  rooms           Room[]
+  availabilities  RoomAvailability[]
+}
+
+model Room {
+  id              String   @id @default(uuid())
+  roomTypeId      String
+  roomNumber      String
+  status          String   @default("AVAILABLE") // AVAILABLE, MAINTENANCE
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  roomType        RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+}
+
+model RoomAvailability {
+  id              String   @id @default(uuid())
+  roomTypeId      String
+  date            DateTime @db.Date
+  availableCount  Int
+  price           Float    // To handle dynamic pricing
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  roomType        RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([roomTypeId, date])
+}
+
+model Review {
+  id              String   @id @default(uuid())
+  hotelId         String
+  userId          String   // Store UUID from auth-service
+  bookingId       String   // Must have stayed
+  rating          Float
+  comment         String
+  images          String[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  hotel           Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  replies         ReviewReply[]
+}
+
+model ReviewReply {
+  id              String   @id @default(uuid())
+  reviewId        String
+  userId          String   // Hotel Owner/Admin
+  comment         String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  review          Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+}
+
+model FavoriteHotel {
+  id              String   @id @default(uuid())
+  userId          String   // Store UUID from auth-service
+  hotelId         String
+  createdAt       DateTime @default(now())
+
+  hotel           Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, hotelId])
 }

@@ -54,6 +54,7 @@ const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL || "http://order_api:300
 const ANALYTICS_SERVICE_URL = process.env.ANALYTICS_SERVICE_URL || "http://analytics_api:3003";
 const NOTIFICATION_SERVICE_URL = process.env.NOTIFICATION_SERVICE_URL || "http://notification_api:3004";
 const CATALOG_SERVICE_URL = process.env.CATALOG_SERVICE_URL || "http://catalog_api:3005";
+const OPERATION_SERVICE_URL = process.env.OPERATION_SERVICE_URL || "http://operation_api:3006";
 
 setupProxy("/api/auth", AUTH_SERVICE_URL);
 setupProxy("/api/users", AUTH_SERVICE_URL); // Tùy chọn nếu user thuộc auth-service
@@ -62,7 +63,12 @@ setupProxy("/api/bookings", ORDER_SERVICE_URL); // Tùy chọn nếu bookings th
 setupProxy("/api/payment", ORDER_SERVICE_URL); // Thêm payment
 setupProxy("/api/analytics", ANALYTICS_SERVICE_URL);
 setupProxy("/api/notifications", NOTIFICATION_SERVICE_URL);
+setupProxy("/api/v1/notifications", NOTIFICATION_SERVICE_URL);
+setupProxy("/api/v1/app-notifications", NOTIFICATION_SERVICE_URL);
+setupProxy("/api/v1/devices", NOTIFICATION_SERVICE_URL);
 setupProxy("/api/hotels", CATALOG_SERVICE_URL); // Thêm catalog
+setupProxy("/api/chat", OPERATION_SERVICE_URL); // Tùy chọn nếu chat thuộc operation
+setupProxy("/api/conversations", OPERATION_SERVICE_URL);
 
 // Route kiểm tra sức khỏe Gateway
 app.get("/health", (req: Request, res: Response) => {
@@ -86,4 +92,5 @@ app.listen(PORT, () => {
   console.log(`Auth Service     -> ${AUTH_SERVICE_URL}`);
   console.log(`Order Service    -> ${ORDER_SERVICE_URL}`);
   console.log(`Analytics Service-> ${ANALYTICS_SERVICE_URL}`);
+  console.log(`Operation Service-> ${OPERATION_SERVICE_URL}`);
 });

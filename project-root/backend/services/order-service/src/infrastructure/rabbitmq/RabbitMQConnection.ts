@@ -14,10 +14,7 @@ class RabbitMQConnection {
 
   private readonly url = RABBITMQ_URL || "amqp://guest:guest@localhost:5672";
 
-  async connect(): Promise<void> {
-    const maxRetries = 3;
-    const delayMs = 2000; 
-
+  async connect(maxRetries = 10, delayMs = 3000): Promise<void> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         this.connection = await amqp.connect(this.url);

@@ -13514,7 +13514,7 @@ export namespace Prisma {
     id?: UuidFilter<"Booking"> | string
     bookingCode?: StringFilter<"Booking"> | string
     userId?: UuidFilter<"Booking"> | string
-    hotelId?: UuidFilter<"Booking"> | string
+    hotelId?: StringFilter<"Booking"> | string
     checkInDate?: DateTimeFilter<"Booking"> | Date | string
     checkOutDate?: DateTimeFilter<"Booking"> | Date | string
     totalNights?: IntFilter<"Booking"> | number
@@ -13567,7 +13567,7 @@ export namespace Prisma {
     OR?: BookingWhereInput[]
     NOT?: BookingWhereInput | BookingWhereInput[]
     userId?: UuidFilter<"Booking"> | string
-    hotelId?: UuidFilter<"Booking"> | string
+    hotelId?: StringFilter<"Booking"> | string
     checkInDate?: DateTimeFilter<"Booking"> | Date | string
     checkOutDate?: DateTimeFilter<"Booking"> | Date | string
     totalNights?: IntFilter<"Booking"> | number
@@ -13618,7 +13618,7 @@ export namespace Prisma {
     id?: UuidWithAggregatesFilter<"Booking"> | string
     bookingCode?: StringWithAggregatesFilter<"Booking"> | string
     userId?: UuidWithAggregatesFilter<"Booking"> | string
-    hotelId?: UuidWithAggregatesFilter<"Booking"> | string
+    hotelId?: StringWithAggregatesFilter<"Booking"> | string
     checkInDate?: DateTimeWithAggregatesFilter<"Booking"> | Date | string
     checkOutDate?: DateTimeWithAggregatesFilter<"Booking"> | Date | string
     totalNights?: IntWithAggregatesFilter<"Booking"> | number
@@ -13638,7 +13638,7 @@ export namespace Prisma {
     NOT?: BookingRoomWhereInput | BookingRoomWhereInput[]
     id?: UuidFilter<"BookingRoom"> | string
     bookingId?: UuidFilter<"BookingRoom"> | string
-    roomId?: UuidFilter<"BookingRoom"> | string
+    roomId?: StringFilter<"BookingRoom"> | string
     roomName?: StringFilter<"BookingRoom"> | string
     pricePerNight?: DecimalFilter<"BookingRoom"> | Decimal | DecimalJsLike | number | string
     quantity?: IntFilter<"BookingRoom"> | number
@@ -13661,7 +13661,7 @@ export namespace Prisma {
     OR?: BookingRoomWhereInput[]
     NOT?: BookingRoomWhereInput | BookingRoomWhereInput[]
     bookingId?: UuidFilter<"BookingRoom"> | string
-    roomId?: UuidFilter<"BookingRoom"> | string
+    roomId?: StringFilter<"BookingRoom"> | string
     roomName?: StringFilter<"BookingRoom"> | string
     pricePerNight?: DecimalFilter<"BookingRoom"> | Decimal | DecimalJsLike | number | string
     quantity?: IntFilter<"BookingRoom"> | number
@@ -13688,7 +13688,7 @@ export namespace Prisma {
     NOT?: BookingRoomScalarWhereWithAggregatesInput | BookingRoomScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"BookingRoom"> | string
     bookingId?: UuidWithAggregatesFilter<"BookingRoom"> | string
-    roomId?: UuidWithAggregatesFilter<"BookingRoom"> | string
+    roomId?: StringWithAggregatesFilter<"BookingRoom"> | string
     roomName?: StringWithAggregatesFilter<"BookingRoom"> | string
     pricePerNight?: DecimalWithAggregatesFilter<"BookingRoom"> | Decimal | DecimalJsLike | number | string
     quantity?: IntWithAggregatesFilter<"BookingRoom"> | number
@@ -14168,7 +14168,7 @@ export namespace Prisma {
     OR?: CancellationPolicyWhereInput[]
     NOT?: CancellationPolicyWhereInput | CancellationPolicyWhereInput[]
     id?: UuidFilter<"CancellationPolicy"> | string
-    hotelId?: UuidFilter<"CancellationPolicy"> | string
+    hotelId?: StringFilter<"CancellationPolicy"> | string
     daysBeforeCheckIn?: IntFilter<"CancellationPolicy"> | number
     refundPercentage?: DecimalFilter<"CancellationPolicy"> | Decimal | DecimalJsLike | number | string
   }
@@ -14185,7 +14185,7 @@ export namespace Prisma {
     AND?: CancellationPolicyWhereInput | CancellationPolicyWhereInput[]
     OR?: CancellationPolicyWhereInput[]
     NOT?: CancellationPolicyWhereInput | CancellationPolicyWhereInput[]
-    hotelId?: UuidFilter<"CancellationPolicy"> | string
+    hotelId?: StringFilter<"CancellationPolicy"> | string
     daysBeforeCheckIn?: IntFilter<"CancellationPolicy"> | number
     refundPercentage?: DecimalFilter<"CancellationPolicy"> | Decimal | DecimalJsLike | number | string
   }, "id">
@@ -14207,7 +14207,7 @@ export namespace Prisma {
     OR?: CancellationPolicyScalarWhereWithAggregatesInput[]
     NOT?: CancellationPolicyScalarWhereWithAggregatesInput | CancellationPolicyScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"CancellationPolicy"> | string
-    hotelId?: UuidWithAggregatesFilter<"CancellationPolicy"> | string
+    hotelId?: StringWithAggregatesFilter<"CancellationPolicy"> | string
     daysBeforeCheckIn?: IntWithAggregatesFilter<"CancellationPolicy"> | number
     refundPercentage?: DecimalWithAggregatesFilter<"CancellationPolicy"> | Decimal | DecimalJsLike | number | string
   }
@@ -16933,7 +16933,7 @@ export namespace Prisma {
     NOT?: BookingRoomScalarWhereInput | BookingRoomScalarWhereInput[]
     id?: UuidFilter<"BookingRoom"> | string
     bookingId?: UuidFilter<"BookingRoom"> | string
-    roomId?: UuidFilter<"BookingRoom"> | string
+    roomId?: StringFilter<"BookingRoom"> | string
     roomName?: StringFilter<"BookingRoom"> | string
     pricePerNight?: DecimalFilter<"BookingRoom"> | Decimal | DecimalJsLike | number | string
     quantity?: IntFilter<"BookingRoom"> | number

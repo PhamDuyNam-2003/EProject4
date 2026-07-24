@@ -24,6 +24,11 @@ class AuthService {
       onError: (DioException e, handler) async {
         // Tự động renew token nếu hết hạn (401)
         if (e.response?.statusCode == 401) {
+          // Ngăn chặn infinite loop nếu chính request refresh bị lỗi 401
+          if (e.requestOptions.path.contains('/auth/refresh')) {
+             return handler.next(e);
+          }
+
           bool renewed = await _renewToken();
           if (renewed) {
             final token = await _storage.read(key: 'access_token');
@@ -44,6 +49,7 @@ class AuthService {
 
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
   late Dio _dio;
+  Dio get dio => _dio;
   UserModel? _currentUser;
 
   UserModel? get currentUser => _currentUser;
@@ -96,6 +102,51 @@ class AuthService {
          throw Exception(e.response?.data['message'] ?? 'Lỗi đăng nhập');
       }
       throw Exception('Lỗi đăng nhập: ${e.toString()}');
+    }
+  }
+
+  Future<void> updateAvatar(String userId, dynamic fileBytes, String fileName) async {
+    try {
+      final formData = FormData.fromMap({
+        'avatar': MultipartFile.fromBytes(fileBytes, filename: fileName),
+      });
+
+      final response = await _dio.post(
+        '/users/$userId/avatar',
+        data: formData,
+      );
+
+      final data = response.data;
+      if (data['success'] == true) {
+        // Cập nhật URL mới vào local user profile bằng cách tạo instance mới
+        if (_currentUser != null && _currentUser!.profile != null) {
+          final updatedProfile = UserProfile(
+            userId: _currentUser!.profile!.userId,
+            fullName: _currentUser!.profile!.fullName,
+            phoneNumber: _currentUser!.profile!.phoneNumber,
+            address: _currentUser!.profile!.address,
+            avatarUrl: data['data']['profile']['avatarUrl'],
+          );
+          
+          _currentUser = UserModel(
+            id: _currentUser!.id,
+            email: _currentUser!.email,
+            role: _currentUser!.role,
+            status: _currentUser!.status,
+            loginAttempts: _currentUser!.loginAttempts,
+            createdAt: _currentUser!.createdAt,
+            agentProfile: _currentUser!.agentProfile,
+            profile: updatedProfile,
+          );
+        }
+      } else {
+        throw Exception(data['message'] ?? 'Lỗi upload ảnh');
+      }
+    } catch (e) {
+      if (e is DioException && e.response != null) {
+         throw Exception(e.response?.data['message'] ?? 'Lỗi upload ảnh');
+      }
+      throw Exception('Lỗi upload ảnh: ${e.toString()}');
     }
   }
 

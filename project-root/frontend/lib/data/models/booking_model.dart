@@ -1,8 +1,8 @@
 import 'hotel_model.dart';
 import 'user_model.dart';
 
-enum BookingStatus { PENDING, CONFIRMED, CANCELLED }
-enum PaymentStatus { UNPAID, PAID, REFUNDED }
+enum BookingStatus { PENDING, CONFIRMED, CHECKED_IN, COMPLETED, CANCELLED }
+enum PaymentStatus { UNPAID, PAID, REFUNDING, REFUNDED }
 
 class BookingModel {
   final String id;
@@ -10,7 +10,7 @@ class BookingModel {
   final String hotelId;
   final DateTime checkInDate;
   final DateTime checkOutDate;
-  final double totalPrice;
+  final double finalAmount;
   final BookingStatus status;
   final PaymentStatus paymentStatus;
   final DateTime createdAt;
@@ -24,7 +24,7 @@ class BookingModel {
     required this.hotelId,
     required this.checkInDate,
     required this.checkOutDate,
-    required this.totalPrice,
+    required this.finalAmount,
     required this.status,
     required this.paymentStatus,
     required this.createdAt,
@@ -39,7 +39,7 @@ class BookingModel {
       hotelId: json['hotelId'] ?? json['hotel_id'],
       checkInDate: DateTime.parse(json['checkInDate'] ?? json['check_in_date']),
       checkOutDate: DateTime.parse(json['checkOutDate'] ?? json['check_out_date']),
-      totalPrice: (json['totalPrice'] ?? json['total_price']).toDouble(),
+      finalAmount: double.parse((json['finalAmount'] ?? json['totalPrice'] ?? 0).toString()),
       status: BookingStatus.values.firstWhere(
         (e) => e.toString() == 'BookingStatus.${json['status']}',
         orElse: () => BookingStatus.PENDING,
@@ -61,7 +61,7 @@ class BookingModel {
       'hotelId': hotelId,
       'checkInDate': checkInDate.toIso8601String(),
       'checkOutDate': checkOutDate.toIso8601String(),
-      'totalPrice': totalPrice,
+      'finalAmount': finalAmount,
       'status': status.toString().split('.').last,
       'paymentStatus': paymentStatus.toString().split('.').last,
       'createdAt': createdAt.toIso8601String(),

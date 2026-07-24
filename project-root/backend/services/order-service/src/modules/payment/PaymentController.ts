@@ -20,8 +20,29 @@ export class PaymentController {
     const result = await paymentService.handleVNPayReturn(req.query);
 
     // Ở môi trường thực tế, sau khi xử lý return, chúng ta thường redirect về trang Frontend.
-    // Tạm thời trả về JSON
-    successResponse(res, 200, "Payment return processed", result);
+    const isSuccess = result.success;
+    const message = isSuccess ? "Thanh toán thành công!" : "Thanh toán bị hủy hoặc thất bại!";
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+          <meta charset="utf-8">
+          <title>Processing Payment...</title>
+      </head>
+      <body>
+          <h3>${message}</h3>
+          <p>Đang quay trở lại ứng dụng...</p>
+          <script>
+              setTimeout(() => {
+                  window.close();
+              }, 1500);
+          </script>
+      </body>
+      </html>
+    `;
+
+    res.status(200).send(html);
   });
 }
 

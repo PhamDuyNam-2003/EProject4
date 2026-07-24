@@ -6,6 +6,7 @@ import '../../../core/responsive_wrapper.dart';
 import '../../../config/constants.dart';
 import 'login_screen.dart';
 import 'reset_password_screen.dart';
+import '../../../main.dart';
 
 class OTPScreen extends StatefulWidget {
   final String email;
@@ -54,7 +55,7 @@ class _OTPScreenState extends State<OTPScreen> {
         );
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
           (route) => false,
         );
       }

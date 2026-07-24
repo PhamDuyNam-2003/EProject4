@@ -14,6 +14,8 @@ export interface IUserService {
   getUserById(id: string): Promise<UserResponseDto | null>;
 
   getUserByEmail(email: string): Promise<UserResponseDto | null>;
+  
+  getUserWithPasswordByEmail(email: string): Promise<any>;
 
   getAllUsers(): Promise<UserResponseDto[]>;
 

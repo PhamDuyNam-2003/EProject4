@@ -27,4 +27,6 @@ export const env = {
   VNPAY_HASH_SECRET: process.env.VNPAY_HASH_SECRET,
   VNPAY_URL: process.env.VNPAY_URL,
   VNPAY_RETURN_URL: process.env.VNPAY_RETURN_URL,
+
+  CATALOG_SERVICE_URL: process.env.CATALOG_SERVICE_URL ?? "http://localhost:3005",
 };
