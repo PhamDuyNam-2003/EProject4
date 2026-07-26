@@ -1,123 +1,149 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
 datasource db {
   provider = "postgresql"
 }
 
-generator client {
-  provider = "prisma-client-js"
+model Hotel {
+  id            String      @id @default(uuid()) @db.Uuid
+  ownerId       String      @db.Uuid // Chỉ lưu UUID tham chiếu tới AgentProfile ở identity-service
+  name          String      @db.VarChar(255)
+  slug          String      @unique @db.VarChar(255)
+  description   String?     @db.Text
+  address       String      @db.Text
+  city          String      @db.VarChar(100)
+  country       String      @default("Vietnam") @db.VarChar(100)
+  latitude      Decimal?    @db.Decimal(10,8)
+  longitude     Decimal?    @db.Decimal(11,8)
+  phone         String?     @db.VarChar(20)
+  email         String?     @db.VarChar(255)
+  thumbnail     String?     @db.Text
+  amenities     String[]    @default([])
+  rating        Float       @default(0)
+  checkInTime   String?     @db.VarChar(10)
+  checkOutTime  String?     @db.VarChar(10)
+  status        HotelStatus @default(PENDING)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  deletedAt     DateTime?
+  propertyType  PropertyType @default(HOTEL) @map("property_type")
+  
+  images        HotelImage[]
+  rooms         Room[]
+  roomTypes     RoomType[]
+  
+  
+  @@map("hotels")
 }
 
-model Hotel {
-  id                  String   @id @default(uuid())
-  name                String
-  city                String
-  district            String
-  address             String
-  description         String?
-  price               Float
-  rating              Float    @default(5.0)
-  reviewScore         Float    @default(9.0)
-  reviewCount         Int      @default(0)
-  category            String
-  distanceToCenter    Float
-  nearPublicTransport Boolean  @default(false)
-  petFriendly         Boolean  @default(false)
-  maxAdults           Int      @default(2)
-  maxKids             Int      @default(0)
-  bedrooms            Int      @default(1)
-  availableRooms      Int      @default(5)
-  amenities           String[]
-  roomFeatures        String[]
-  policies            String[]
-  images              String[]
-  latitude            Float?
-  longitude           Float?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-
-  roomTypes           RoomType[]
-  reviews             Review[]
-  favoritedBy         FavoriteHotel[]
+model HotelImage {
+  id         String   @id @default(uuid()) @db.Uuid
+  hotelId    String   @db.Uuid
+  imageUrl   String   @db.Text
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  hotel      Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  
+  @@map("hotel_images")
 }
 
 model RoomType {
-  id              String   @id @default(uuid())
-  hotelId         String
-  name            String
-  description     String?
-  basePrice       Float
-  maxAdults       Int      @default(2)
-  maxKids         Int      @default(0)
-  bedrooms        Int      @default(1)
-  beds            String[]
-  amenities       String[]
-  images          String[]
-  totalInventory  Int      @default(5)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  hotel           Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
-  rooms           Room[]
-  availabilities  RoomAvailability[]
+  id            String    @id @default(uuid()) @db.Uuid
+  hotelId       String    @db.Uuid
+  name          String    @db.VarChar(150)
+  description   String?   @db.Text
+  price         Decimal   @db.Decimal(12,2)
+  maxGuests     Int
+  maxAdults     Int
+  maxChildren   Int
+  bedType       BedType
+  bedCount      Int
+  area          Float?
+  thumbnail     String?   @db.Text
+  isActive      Boolean   @default(true)
+  amenities     String[]  @default([])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  hotel         Hotel     @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  rooms         Room[]
+  images        RoomTypeImage[]
+  
+  
+  @@unique([hotelId, name])
+  @@map("room_types")
 }
+
 
 model Room {
-  id              String   @id @default(uuid())
-  roomTypeId      String
-  roomNumber      String
-  status          String   @default("AVAILABLE") // AVAILABLE, MAINTENANCE
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  roomType        RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+  id            String      @id @default(uuid()) @db.Uuid
+  hotelId       String      @db.Uuid
+  roomTypeId    String      @db.Uuid
+  roomNumber    String      @db.VarChar(30)
+  floor         Int?
+  status        RoomStatus  @default(AVAILABLE)
+  note          String?     @db.Text
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  hotel         Hotel       @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  roomType      RoomType    @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+  
+  @@unique([hotelId, roomNumber])
+  @@map("rooms")
 }
 
-model RoomAvailability {
-  id              String   @id @default(uuid())
-  roomTypeId      String
-  date            DateTime @db.Date
-  availableCount  Int
-  price           Float    // To handle dynamic pricing
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
 
-  roomType        RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
-
-  @@unique([roomTypeId, date])
+model RoomTypeImage {
+  id          String    @id @default(uuid()) @db.Uuid
+  roomTypeId  String    @db.Uuid
+  imageUrl    String    @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  roomType    RoomType  @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+  
+  @@map("room_type_images")
 }
 
-model Review {
-  id              String   @id @default(uuid())
-  hotelId         String
-  userId          String   // Store UUID from auth-service
-  bookingId       String   // Must have stayed
-  rating          Float
-  comment         String
-  images          String[]
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  hotel           Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
-  replies         ReviewReply[]
+enum HotelStatus {
+  PENDING
+  ACTIVE
+  INACTIVE
+  REJECTED
 }
 
-model ReviewReply {
-  id              String   @id @default(uuid())
-  reviewId        String
-  userId          String   // Hotel Owner/Admin
-  comment         String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  review          Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+enum RoomStatus {
+  AVAILABLE
+  BOOKED
+  OCCUPIED
+  MAINTENANCE
 }
 
-model FavoriteHotel {
-  id              String   @id @default(uuid())
-  userId          String   // Store UUID from auth-service
-  hotelId         String
-  createdAt       DateTime @default(now())
+enum BedType {
+  SINGLE
+  DOUBLE
+  QUEEN
+  KING
+  TWIN
+  BUNK
+}
 
-  hotel           Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, hotelId])
+enum PropertyType {
+  HOTEL         
+  RESORT       
+  VILLA         
+  APARTMENT   
+  HOMESTAY      
+  GUESTHOUSE    
+  MOTEL         
+  CAMPING      
+  GLAMPING      
+  CRUISE        
+  ENTIRE_HOUSE 
 }

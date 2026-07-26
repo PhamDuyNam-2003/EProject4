@@ -25,7 +25,7 @@ export const getAllHotels = async (req: Request, res: Response) => {
 
 export const getHotelById = async (req: Request, res: Response) => {
   try {
-    const hotel = await hotelService.getHotelById(req.params.id);
+    const hotel = await hotelService.getHotelById(req.params.id as string);
     if (!hotel) {
       return res.status(404).json({ success: false, message: 'Hotel not found' });
     }
@@ -46,7 +46,7 @@ export const createHotel = async (req: Request, res: Response) => {
 
 export const getRoomTypes = async (req: Request, res: Response) => {
   try {
-    const roomTypes = await hotelService.getRoomTypesByHotelId(req.params.id);
+    const roomTypes = await hotelService.getRoomTypesByHotelId(req.params.id as string);
     res.status(200).json({ success: true, data: roomTypes });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
@@ -55,7 +55,7 @@ export const getRoomTypes = async (req: Request, res: Response) => {
 
 export const getReviews = async (req: Request, res: Response) => {
   try {
-    const reviews = await hotelService.getReviewsByHotelId(req.params.id);
+    const reviews = await hotelService.getReviewsByHotelId(req.params.id as string);
     res.status(200).json({ success: true, data: reviews });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
