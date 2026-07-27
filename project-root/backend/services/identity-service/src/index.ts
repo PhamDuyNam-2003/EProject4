@@ -1,6 +1,4 @@
 import { env } from "@/config/env.js";
-import { rabbitMQ } from "@/infrastructure/rabbitmq/index.js";
-import { startEmailWorker } from "@/modules/auth/workers/emailWorker";
 import app from "@/app.js";
 import logger from "@/utils/logger.js";
 
@@ -9,10 +7,6 @@ const NODE_ENV = env.NODE_ENV;
 
 const startServer = async () => {
   try {
-    await rabbitMQ.connect();
-
-    await startEmailWorker();
-
     const server = app.listen(PORT, () => {
       logger.info(`Server is running on port ${PORT} env ${NODE_ENV}`);
     });
@@ -23,11 +17,6 @@ const startServer = async () => {
       try {
         server.close(async () => {
           logger.info("HTTP Server đã đóng.");
-
-          await rabbitMQ.close();
-
-          logger.info("RabbitMQ đã đóng.");
-
           process.exit(0);
         });
       } catch (error) {
@@ -40,5 +29,6 @@ const startServer = async () => {
     process.exit(1);
   }
 };
+
 
 void startServer();

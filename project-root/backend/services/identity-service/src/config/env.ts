@@ -12,9 +12,7 @@ export const env = {
   DATABASE_URL: process.env.DATABASE_URL!,
 
   REDIS_HOST: process.env.REDIS_HOST ?? "127.0.0.1",
-  REDIS_PORT: Number(process.env.REDIS_PORT) || 6379,
-
-  RABBITMQ_URL: process.env.RABBITMQ_URL ?? "amqp://guest:guest@localhost:5672",
+  REDIS_PORT: parseInt(process.env.REDIS_PORT || "6379", 10),
 
   OTP_TTL: Number(process.env.OTP_TTL) || 300,
 

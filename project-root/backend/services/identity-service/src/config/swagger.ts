@@ -137,7 +137,7 @@ for (const service of services) {
       description: service.description,
       version: "1.0.0",
     },
-    host: "localhost:3000",
+    host: "localhost:3001",
     schemes: ["http"],
     basePath: "",
     components: service.components || {},
