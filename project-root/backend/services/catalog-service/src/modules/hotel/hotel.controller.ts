@@ -29,7 +29,7 @@ export class HotelController {
   getHotelById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const hotel = await this.hotelService.getHotelById(req.params.id as string);
-      if (!hotel || hotel.deletedAt) {
+      if (!hotel || (hotel as any).deletedAt) {
         res.status(404).json({ success: false, message: 'Hotel not found' });
         return;
       }

@@ -12,9 +12,7 @@ const HEADERS = {
   'Authorization': `Bearer ${token}`
 };
 
-async function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function testAll() {
   console.log('🚀 Bắt đầu test API Catalog Service (Có JWT)...');

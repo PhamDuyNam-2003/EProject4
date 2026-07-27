@@ -361,10 +361,26 @@ for (const hotel of mockHotels) {
 async function main() {
   console.log("Start seeding...");
   for (const hotel of mockHotels) {
+    const hotelData = {
+      name: hotel.name,
+      slug: hotel.name.toLowerCase().replace(/\s+/g, '-'),
+      ownerId: '11111111-1111-1111-1111-111111111111',
+      description: hotel.description,
+      address: hotel.address,
+      city: hotel.city,
+      country: 'Vietnam',
+      latitude: hotel.latitude,
+      longitude: hotel.longitude,
+      amenities: hotel.amenities,
+      rating: hotel.rating,
+    };
     await prisma.hotel.upsert({
       where: { id: hotel.id },
-      update: hotel,
-      create: hotel,
+      update: hotelData,
+      create: {
+        id: hotel.id,
+        ...hotelData
+      },
     });
   }
 
