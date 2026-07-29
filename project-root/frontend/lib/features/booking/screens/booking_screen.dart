@@ -186,7 +186,15 @@ class _BookingScreenState extends State<BookingScreen> {
                         title: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(rt.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            Expanded(
+                              child: Text(
+                                rt.name, 
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 2,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
                             Text(remainingText, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.bold)),
                           ],
                         ),
@@ -575,15 +583,19 @@ class _BookingScreenState extends State<BookingScreen> {
               child: Icon(icon, color: Colors.blue.shade700, size: 20),
             ),
             const SizedBox(width: 16),
+            Text(
+              title,
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+            ),
+            const SizedBox(width: 16),
             Expanded(
               child: Text(
-                title,
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+                value,
+                textAlign: TextAlign.right,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
               ),
-            ),
-            Text(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(width: 8),
             Icon(Icons.chevron_right, color: Colors.grey.shade400),

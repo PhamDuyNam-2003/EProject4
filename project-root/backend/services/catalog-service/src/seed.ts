@@ -2,7 +2,7 @@ import { prisma } from "./config/prisma.js";
 
 const mockHotels = [
   {
-    id: "h1",
+    id: "00000000-0000-0000-0000-000000000001",
     name: "Luxury Palace Hotel",
     city: "Ho Chi Minh City",
     district: "District 1",
@@ -27,7 +27,7 @@ const mockHotels = [
     longitude: 106.7044,
   },
   {
-    id: "h2",
+    id: "00000000-0000-0000-0000-000000000002",
     name: "Cozy Boutique Stay",
     city: "Da Lat",
     district: "Ward 3",
@@ -52,7 +52,7 @@ const mockHotels = [
     longitude: 108.4583,
   },
   {
-    id: "h3",
+    id: "00000000-0000-0000-0000-000000000003",
     name: "Vinpearl Resort & Spa",
     city: "Nha Trang",
     district: "Hon Tre",
@@ -77,7 +77,7 @@ const mockHotels = [
     longitude: 109.2415,
   },
   {
-    id: "h4",
+    id: "00000000-0000-0000-0000-000000000004",
     name: "InterContinental Hanoi Landmark72",
     city: "Hanoi",
     district: "Nam Tu Liem",
@@ -102,7 +102,7 @@ const mockHotels = [
     longitude: 105.7845,
   },
   {
-    id: "h5",
+    id: "00000000-0000-0000-0000-000000000005",
     name: "Pullman Vung Tau",
     city: "Vung Tau",
     district: "Thang Tam",
@@ -127,7 +127,7 @@ const mockHotels = [
     longitude: 107.0945,
   },
   {
-    id: "h6",
+    id: "00000000-0000-0000-0000-000000000006",
     name: "JW Marriott Phu Quoc",
     city: "Phu Quoc",
     district: "An Thoi",
@@ -152,7 +152,7 @@ const mockHotels = [
     longitude: 104.0298,
   },
   {
-    id: "h7",
+    id: "00000000-0000-0000-0000-000000000007",
     name: "Sun & Sea Apartment",
     city: "Da Nang",
     district: "Son Tra",
@@ -177,7 +177,7 @@ const mockHotels = [
     longitude: 108.2505,
   },
   {
-    id: "h8",
+    id: "00000000-0000-0000-0000-000000000008",
     name: "Rex Hotel Saigon",
     city: "Ho Chi Minh City",
     district: "District 1",
@@ -202,7 +202,7 @@ const mockHotels = [
     longitude: 106.7022,
   },
   {
-    id: "h9",
+    id: "00000000-0000-0000-0000-000000000009",
     name: "Melia Hanoi",
     city: "Hanoi",
     district: "Hoan Kiem",
@@ -227,7 +227,7 @@ const mockHotels = [
     longitude: 105.8475,
   },
   {
-    id: "h10",
+    id: "00000000-0000-0000-0000-000000000010",
     name: "Muong Thanh Luxury Da Nang",
     city: "Da Nang",
     district: "Ngu Hanh Son",
@@ -256,7 +256,7 @@ const mockHotels = [
 const mockRoomTypes = [
   {
     id: "rt1",
-    hotelId: "h1",
+    hotelId: "00000000-0000-0000-0000-000000000001",
     name: "Phòng Gia Đình Hướng Biển",
     description: "Phòng rộng rãi với tầm nhìn hướng biển tuyệt đẹp",
     basePrice: 150.0,
@@ -270,7 +270,7 @@ const mockRoomTypes = [
   },
   {
     id: "rt1_single",
-    hotelId: "h1",
+    hotelId: "00000000-0000-0000-0000-000000000001",
     name: "Phòng Đơn (Single Room)",
     description: "Phòng tiêu chuẩn dành cho 1-2 người",
     basePrice: 50.0,
@@ -284,7 +284,7 @@ const mockRoomTypes = [
   },
   {
     id: "rt1_double",
-    hotelId: "h1",
+    hotelId: "00000000-0000-0000-0000-000000000001",
     name: "Phòng Đôi (Double Room)",
     description: "Phòng rộng rãi dành cho cặp đôi hoặc gia đình nhỏ",
     basePrice: 85.0,
@@ -298,7 +298,7 @@ const mockRoomTypes = [
   },
   {
     id: "rt2",
-    hotelId: "h2",
+    hotelId: "00000000-0000-0000-0000-000000000002",
     name: "Phòng Tiêu Chuẩn Hướng Phố",
     description: "Phòng thoải mái với tầm nhìn ra thành phố",
     basePrice: 80.0,

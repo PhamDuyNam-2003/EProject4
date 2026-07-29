@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 class AppConstants {
 
   static String get baseUrl {
-    if (kIsWeb) return 'http://localhost:8080/api'; 
-    if (Platform.isAndroid) return 'http://10.0.2.2:8080/api';
-    return 'http://localhost:8080/api';
+    if (kIsWeb) return 'http://192.168.1.10:8080/api'; 
+    if (Platform.isAndroid) return 'http://192.168.1.10:8080/api';
+    return 'http://192.168.1.10:8080/api';
   }
 
   static const Color primaryColor = Color(0xFFD4AF37); // Champagne Gold

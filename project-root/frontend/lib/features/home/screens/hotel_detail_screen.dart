@@ -8,6 +8,7 @@ import '../../../core/responsive_wrapper.dart';
 import '../../../core/app_settings.dart';
 import '../../../data/models/review_model.dart';
 import '../../../data/repositories/hotel_repository.dart';
+import 'map_screen.dart';
 
 class HotelDetailScreen extends StatefulWidget {
   final HotelModel hotel;
@@ -218,6 +219,24 @@ class _HotelDetailScreenState extends State<HotelDetailScreen> {
                               ),
                             ),
                           ],
+                        ),
+                        
+                        const SizedBox(height: 16),
+                        OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => MapScreen(hotels: [widget.hotel])),
+                            );
+                          },
+                          icon: const Icon(Icons.map_outlined),
+                          label: Text(tr('View on Map')),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Theme.of(context).colorScheme.primary,
+                            side: BorderSide(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            minimumSize: const Size(double.infinity, 50),
+                          ),
                         ),
                         
                         const SizedBox(height: 32),

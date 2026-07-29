@@ -19,8 +19,8 @@ export class HotelRepository implements IHotelRepository {
     });
   }
 
-  async findAll(filters: any) {
-    const where: any = { deletedAt: null };
+  async findAll(filters: any, skip?: number, take?: number) {
+    const where: any = {};
     if (filters.city) where.city = filters.city;
     if (filters.propertyType) where.propertyType = filters.propertyType;
     if (filters.status) where.status = filters.status;
@@ -28,6 +28,8 @@ export class HotelRepository implements IHotelRepository {
 
     return await this.prisma.hotel.findMany({
       where,
+      skip,
+      take,
       orderBy: { createdAt: "desc" },
     });
   }

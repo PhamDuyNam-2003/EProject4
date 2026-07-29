@@ -20,7 +20,10 @@ export class HotelService {
   }
 
   async getAllHotels(filters: any) {
-    const hotels = await this.hotelRepository.findAll(filters);
+    const page = parseInt(filters.page as string) || 1;
+    const limit = parseInt(filters.limit as string) || 10;
+    const skip = (page - 1) * limit;
+    const hotels = await this.hotelRepository.findAll(filters, skip, limit);
     return HotelMapper.toResponseList(hotels);
   }
 

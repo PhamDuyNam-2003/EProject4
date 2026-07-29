@@ -167,7 +167,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 32),
             _buildLogoutButton(context),
-            const SizedBox(height: 32),
+            const SizedBox(height: 100), // Increased to avoid bottom navigation bar overlap
           ],
         ),
       ),

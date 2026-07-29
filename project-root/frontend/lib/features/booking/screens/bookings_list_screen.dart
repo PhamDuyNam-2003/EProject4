@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; // Force save to clear stale error
+
 
 import '../../../core/booking_service.dart';
 import '../../../data/models/booking_model.dart';
@@ -93,9 +94,9 @@ class _BookingsListScreenState extends State<BookingsListScreen> with WidgetsBin
                 Expanded(
                   child: TabBarView(
                     children: [
-                      _BookingsListTab(bookings: upcoming, emptyMessage: tr('No upcoming bookings.')),
-                      _BookingsListTab(bookings: completed, emptyMessage: tr('No completed bookings.')),
-                      _BookingsListTab(bookings: cancelled, emptyMessage: tr('No cancelled bookings.')),
+                      _BookingsListTab(bookings: upcoming, emptyMessage: tr('No upcoming bookings.'), onRefresh: _fetchBookings),
+                      _BookingsListTab(bookings: completed, emptyMessage: tr('No completed bookings.'), onRefresh: _fetchBookings),
+                      _BookingsListTab(bookings: cancelled, emptyMessage: tr('No cancelled bookings.'), onRefresh: _fetchBookings),
                     ],
                   ),
                 ),
@@ -111,8 +112,9 @@ class _BookingsListScreenState extends State<BookingsListScreen> with WidgetsBin
 class _BookingsListTab extends StatelessWidget {
   final List<BookingModel> bookings;
   final String emptyMessage;
+  final VoidCallback onRefresh;
 
-  const _BookingsListTab({required this.bookings, required this.emptyMessage});
+  const _BookingsListTab({required this.bookings, required this.emptyMessage, required this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
@@ -179,11 +181,14 @@ class _BookingsListTab extends StatelessWidget {
     required double price,
   }) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        final result = await Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => BookingDetailScreen(booking: booking)),
         );
+        if (result == true) {
+          onRefresh();
+        }
       },
       child: Container(
         decoration: BoxDecoration(
@@ -202,7 +207,7 @@ class _BookingsListTab extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           child: Column(
             children: [
-              // Top Section with Image and Status
+
               Stack(
                 children: [
                   booking.hotel?.images != null && booking.hotel!.images.isNotEmpty 
@@ -289,9 +294,13 @@ class _BookingsListTab extends StatelessWidget {
                       children: [
                         const Icon(Icons.king_bed_outlined, size: 20, color: Color(0xFFD4AF37)),
                         const SizedBox(width: 8),
-                        Text(
-                          room,
-                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.grey.shade800),
+                        Expanded(
+                          child: Text(
+                            room,
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.grey.shade800),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
                         ),
                       ],
                     ),
@@ -300,9 +309,13 @@ class _BookingsListTab extends StatelessWidget {
                       children: [
                         const Icon(Icons.date_range_outlined, size: 20, color: Colors.grey),
                         const SizedBox(width: 8),
-                        Text(
-                          date,
-                          style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                        Expanded(
+                          child: Text(
+                            date,
+                            style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
                         ),
                       ],
                     ),

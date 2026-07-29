@@ -45,7 +45,7 @@ class _BookingCalendarDialogState extends State<BookingCalendarDialog> {
   }
 
   void _initSocket() {
-    _socket = IO.io('http://localhost:3006', IO.OptionBuilder()
+    _socket = IO.io('http://192.168.1.10:3006', IO.OptionBuilder()
       .setTransports(['websocket'])
       .disableAutoConnect()
       .build());

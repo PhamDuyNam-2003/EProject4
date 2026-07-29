@@ -89,12 +89,12 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      final newHotels = await _hotelRepo.getPopularHotels(_currentCriteria, page: _currentPage, limit: 10);
+      final newHotels = await _hotelRepo.getPopularHotels(_currentCriteria, page: _currentPage, limit: 6);
       
       setState(() {
         _currentPage++;
         _isLoading = false;
-        if (newHotels.isEmpty || newHotels.length < 10) {
+        if (newHotels.isEmpty || newHotels.length < 6) {
           _hasMore = false;
         }
         _hotels.addAll(newHotels);
@@ -127,17 +127,20 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => MapScreen(hotels: _hotels, userPosition: _userPosition)),
-          );
-        },
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        icon: const Icon(Icons.map_outlined, color: Colors.white),
-        label: Text(tr('Map View'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
-        elevation: 8,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 70.0),
+        child: FloatingActionButton.extended(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => MapScreen(hotels: _hotels, userPosition: _userPosition)),
+            );
+          },
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          icon: const Icon(Icons.map_outlined, color: Colors.white),
+          label: Text(tr('Map View'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+          elevation: 8,
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(

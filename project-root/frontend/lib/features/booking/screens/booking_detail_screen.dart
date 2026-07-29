@@ -196,21 +196,21 @@ class BookingDetailScreen extends StatelessWidget {
     );
   }
 
-  void _showUnpaidCancelDialog(BuildContext context) {
+  void _showUnpaidCancelDialog(BuildContext screenContext) {
     showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
+      context: screenContext,
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Xác nhận Hủy Đơn', style: TextStyle(fontWeight: FontWeight.bold)),
         content: const Text('Bạn có chắc chắn muốn hủy đơn đặt phòng này không?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Không'),
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context);
-              _processUnpaidCancel(context);
+              Navigator.pop(dialogContext);
+              _processUnpaidCancel(screenContext);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
             child: const Text('Có, Hủy Đơn'),
@@ -262,7 +262,7 @@ class BookingDetailScreen extends StatelessWidget {
           MaterialPageRoute(
             builder: (context) => VnpayWebviewScreen(
               paymentUrl: paymentUrl,
-              returnUrlPrefix: 'http://localhost:3002/api/payment/vnpay/return',
+              returnUrlPrefix: 'http://192.168.1.10:3002/api/payment/vnpay/return',
             ),
           ),
         );

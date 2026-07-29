@@ -179,9 +179,13 @@ class HotelCard extends StatelessWidget {
                       children: [
                         const Icon(Icons.directions_walk, size: 14, color: Colors.white70),
                         const SizedBox(width: 4),
-                        Text(
-                          _getDistanceText(),
-                          style: const TextStyle(fontSize: 12, color: Colors.white70),
+                        Expanded(
+                          child: Text(
+                            _getDistanceText(),
+                            style: const TextStyle(fontSize: 12, color: Colors.white70),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),
